@@ -1,0 +1,270 @@
+# API Contract: RAG Chatbot Service
+
+**API Version**: 1.0  
+**Base URL**: `/api/v1`  
+**Protocol**: REST + OpenAPI 3.0  
+**Security**: None (anonymous sessions)  
+
+## Overview
+
+This document defines the API contracts for the RAG chatbot service, enabling the frontend UI to communicate with the backend RAG processing system. The API supports anonymous sessions, query processing, response generation with citations, and content filtering.
+
+## Endpoints
+
+### Session Management
+
+#### POST /sessions
+Create a new anonymous session
+
+**Request**:
+```json
+{}
+```
+
+**Response** (201 Created):
+```json
+{
+  "session_token": "string (UUID)",
+  "expires_at": "ISO 8601 timestamp",
+  "metadata": {}
+}
+```
+
+**Validation**:
+- Session tokens must be securely generated UUIDs
+- Expiration must be within 24 hours
+
+#### GET /sessions/{session_token}
+Get session details
+
+**Response** (200 OK):
+```json
+{
+  "session_token": "string (UUID)",
+  "created_at": "ISO 8601 timestamp",
+  "last_activity_at": "ISO 8601 timestamp",
+  "expires_at": "ISO 8601 timestamp",
+  "is_active": "boolean"
+}
+```
+
+### Chat Operations
+
+#### POST /chat
+Submit a query to the RAG system and receive a response
+
+**Request**:
+```json
+{
+  "session_token": "string (UUID)",
+  "query": "string (user query text)",
+  "query_context": {
+    "type": "enum (global|focused)",
+    "selected_text": "string (optional, for focused queries)"
+  }
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "response_id": "string (UUID)",
+  "session_token": "string (UUID)",
+  "query": "string (original query)",
+  "response": "string (AI-generated response)",
+  "citations": [
+    {
+      "chapter_number": "string",
+      "section_number": "string",
+      "text_excerpt": "string",
+      "url": "string (optional, direct link to textbook section)"
+    }
+  ],
+  "timestamp": "ISO 8601 timestamp"
+}
+```
+
+**Error Responses**:
+- 400 Bad Request: Invalid request format
+- 401 Unauthorized: Invalid or expired session
+- 422 Unprocessable Entity: Content filtered as inappropriate
+- 500 Internal Server Error: Processing failure
+
+**Validation**:
+- `query` must be 1-1000 characters
+- `session_token` must reference an active session
+- If `query_context.type` is "focused", `selected_text` is required
+
+### Content Filtering
+
+#### POST /validate
+Check if content is appropriate (used internally but documented for transparency)
+
+**Request**:
+```json
+{
+  "content": "string (text to validate)",
+  "content_type": "enum (query|response)"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "is_approved": "boolean",
+  "reason": "string (if not approved)",
+  "moderation_flags": ["string"]
+}
+```
+
+### Textbook Content
+
+#### GET /textbook/chapters
+List all available textbook chapters
+
+**Response** (200 OK):
+```json
+[
+  {
+    "chapter_number": "string",
+    "chapter_title": "string",
+    "sections": [
+      {
+        "section_number": "string",
+        "section_title": "string"
+      }
+    ]
+  }
+]
+```
+
+#### GET /textbook/chapters/{chapter_number}/sections/{section_number}
+Get content of a specific textbook section
+
+**Response** (200 OK):
+```json
+{
+  "chapter_number": "string",
+  "section_number": "string",
+  "section_title": "string",
+  "content": "string (textbook content)",
+  "references": ["string (related sections)"]
+}
+```
+
+## Error Handling
+
+### Standard Error Format
+```json
+{
+  "error": {
+    "code": "string (error code)",
+    "message": "string (user-friendly message)",
+    "details": "string (optional, technical details)",
+    "timestamp": "ISO 8601 timestamp"
+  }
+}
+```
+
+### Common Error Codes
+- `INVALID_SESSION`: Session token is invalid or expired
+- `CONTENT_FILTERED`: Query or response content was flagged as inappropriate
+- `PROCESSING_ERROR`: Backend processing failure
+- `RAG_RETRIEVAL_FAILED`: RAG system failed to retrieve relevant content
+- `TEXTBOOK_CONTENT_UNAVAILABLE`: Required textbook content is not accessible
+
+## Data Validation
+
+### Query Validation
+- Length: 1-1000 characters
+- Content: Must not contain harmful or inappropriate material
+- Session: Must be associated with a valid, active session
+
+### Response Validation
+- Must be grounded in textbook content only (no hallucinations)
+- Must include at least one citation to textbook content
+- Must not contain harmful or inappropriate material
+
+### Session Validation
+- Session tokens must be valid UUIDs
+- Sessions must be active (not expired)
+- Session data must be deleted after expiration
+
+## Security Considerations
+
+1. **Content Filtering**: All inputs and outputs are filtered to prevent harmful content
+2. **Session Management**: Anonymous sessions with automatic expiration
+3. **No User Data Retention**: No personal information is stored
+4. **Read-Only Access**: The system has no rights to modify textbook content
+5. **Rate Limiting**: Per-session rate limiting to prevent abuse
+
+## Performance Requirements
+
+1. **Response Time**: API responses must be delivered within 2 seconds
+2. **Availability**: 99% uptime requirement
+3. **Concurrent Sessions**: System must support at least 1000 concurrent sessions
+
+## Compliance
+
+All API interactions must comply with the following feature requirements:
+- FR-004: All responses must include proper citations
+- FR-008: Temporary session identifier management
+- FR-009: Book-first principle enforcement
+- FR-010: Prevention of hallucinations
+- FR-011: Mandatory source citations
+- FR-021: No retention of user data beyond session
+- FR-022: Privacy-safe operations
+- FR-023: Content filtering implementation
+- FR-024: Graceful failure handling
+
+## Examples
+
+### Creating a Session
+```
+POST /sessions
+Content-Type: application/json
+
+{}
+```
+
+Response:
+```json
+{
+  "session_token": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+  "expires_at": "2025-12-17T10:30:00Z",
+  "metadata": {}
+}
+```
+
+### Submitting a Query
+```
+POST /chat
+Content-Type: application/json
+
+{
+  "session_token": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+  "query": "Explain the principles of neural network backpropagation",
+  "query_context": {
+    "type": "global"
+  }
+}
+```
+
+Response:
+```json
+{
+  "response_id": "f0e0d0c0-b9a8-7765-4321-fedcba098765",
+  "session_token": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+  "query": "Explain the principles of neural network backpropagation",
+  "response": "Neural network backpropagation is a supervised learning algorithm that adjusts weights by propagating errors backward through the network...",
+  "citations": [
+    {
+      "chapter_number": "4",
+      "section_number": "4.2",
+      "text_excerpt": "Backpropagation is a method used in artificial neural networks to calculate a gradient that is needed in the calculation of the weights to be used in the network...",
+      "url": "/docs/physical-ai-textbook/chapter4#section4.2"
+    }
+  ],
+  "timestamp": "2025-12-16T10:30:45Z"
+}
+```

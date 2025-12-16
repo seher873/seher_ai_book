@@ -218,6 +218,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - Markdown/CommonMark (for content), Node.js v18.17.0+ (for Docusaurus compatibility) + Docusaurus v3.1.0+ + Docusaurus v3.x, React, Markdown/CommonMark, Git for version control (001-finalize-textbook)
 - Markdown (CommonMark specification), JavaScript ES2020+, Node.js v18.17.0+ + Docusaurus v3.x, React, Bootstrap CSS, Material Design components (006-glossary-appendix)
 - File-based (Markdown files in content/ and docs/ directories), no database required (006-glossary-appendix)
+- Python 3.11 (for RAG backend) and JavaScript/TypeScript (for frontend embed) + FastAPI (backend), OpenAI Agents/ChatKit SDKs, Qdrant (vector DB), Neon Postgres (session storage) (001-integrated-rag-chatbot)
+- Serverless PostgreSQL for session metadata, Vector database (Qdrant) for content embeddings, Physical AI textbook content (read-only) (001-integrated-rag-chatbot)
 
 ## Recent Changes
 - 001-physical-ai-textbook: Added Markdown (CommonMark specification), Docusaurus v3.x + Node.js v18+, npm/yarn, Git for version control

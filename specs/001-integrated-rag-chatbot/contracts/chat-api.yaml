@@ -1,0 +1,146 @@
+# API Contract: RAG Chatbot for Physical AI Textbook
+
+## Overview
+This document specifies the API contracts for the RAG chatbot system that integrates with the Physical AI textbook. The API enables users to ask questions about textbook content and receive responses with proper citations.
+
+## Base URL
+`http://localhost:8000/api` (development)
+`https://api.example.com/v1` (production)
+
+## Authentication
+The API uses anonymous sessions with temporary session IDs (no authentication required per spec).
+
+## Endpoints
+
+### POST /chat
+Submit a question to the RAG chatbot and receive a response.
+
+**Request:**
+```json
+{
+  "query": "What is quantum entanglement?",
+  "session_id": "temp-session-12345",
+  "query_type": "global_corpus",
+  "selected_text": null,
+  "context": {
+    "previous_queries": ["What is quantum mechanics?"],
+    "current_chapter": "Chapter 5",
+    "current_section": "5.3"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "response_id": "response-uuid-123",
+  "response_text": "Quantum entanglement is a phenomenon where...",
+  "citations": [
+    {
+      "chapter": "Chapter 7",
+      "section": "7.2",
+      "text": "Definition and explanation of quantum entanglement..."
+    }
+  ],
+  "confidence_score": 0.95,
+  "query_type": "global_corpus",
+  "session_id": "temp-session-12345"
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": "content_filtered",
+  "message": "Your query contained content that was filtered for safety reasons.",
+  "query_id": "query-uuid-123"
+}
+```
+
+### POST /chat/selected-text
+Submit a question about user-selected text in the textbook.
+
+**Request:**
+```json
+{
+  "query": "Can you explain this concept in simpler terms?",
+  "session_id": "temp-session-12345",
+  "query_type": "selected_text",
+  "selected_text": "The mathematical formulation of quantum entanglement involves...",
+  "context": {
+    "selected_chapter": "Chapter 7",
+    "selected_section": "7.2"
+  }
+}
+```
+
+**Response:**
+Same as POST /chat but with citations specifically from the selected text context.
+
+### GET /session/{session_id}
+Get information about a session.
+
+**Response:**
+```json
+{
+  "session_id": "temp-session-12345",
+  "created_at": "2025-12-16T10:00:00Z",
+  "last_activity_at": "2025-12-16T10:05:00Z",
+  "expires_at": "2025-12-16T11:00:00Z"
+}
+```
+
+### POST /validate-query
+Validate a query before processing to check for safety and relevance.
+
+**Request:**
+```json
+{
+  "query": "What is quantum entanglement?",
+  "session_id": "temp-session-12345"
+}
+```
+
+**Response:**
+```json
+{
+  "query_id": "query-uuid-123",
+  "is_safe": true,
+  "is_relevant": true,
+  "textbook_coverage": {
+    "covered_topics": ["quantum mechanics", "quantum entanglement"],
+    "coverage_score": 0.9
+  }
+}
+```
+
+## Common Error Codes
+- `400 Bad Request`: Invalid request parameters
+- `403 Forbidden`: Query content filtered for safety
+- `422 Unprocessable Entity`: Query is out of textbook scope
+- `429 Too Many Requests`: Rate limit exceeded
+- `500 Internal Server Error`: Server error occurred
+- `503 Service Unavailable`: External service (e.g., LLM) unavailable
+
+## Data Models
+
+### Query Object
+- `query`: string, the user's question (required, 1-2000 characters)
+- `session_id`: string, temporary session identifier (required)
+- `query_type`: enum ["global_corpus", "selected_text"] (required)
+- `selected_text`: string or null, text the user has selected (optional)
+- `context`: object, additional context for the query (optional)
+
+### Response Object
+- `response_id`: string, unique identifier for the response
+- `response_text`: string, the generated response text
+- `citations`: array of citation objects
+- `confidence_score`: number, confidence in the response (0.0-1.0)
+- `query_type`: enum ["global_corpus", "selected_text"]
+- `session_id`: string, temporary session identifier
+
+### Citation Object
+- `chapter`: string, the chapter identifier in the textbook
+- `section`: string, the section identifier in the textbook
+- `text`: string, the cited text snippet
+- `similarity_score`: number, similarity to the query (0.0-1.0)
