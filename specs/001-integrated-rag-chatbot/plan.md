@@ -90,6 +90,29 @@ frontend/
 │       └── ragApi.js
 └── tests/
 
+## Dependencies and Assumptions
+
+### External Dependencies
+
+1. **OpenAI API** - For LLM capabilities in the RAG system
+2. **Qdrant Vector Database** - For content embeddings and retrieval
+3. **Neon PostgreSQL** - For session metadata storage
+4. **Docusaurus Framework** - Existing textbook platform where chatbot will be embedded
+5. **FastAPI** - Backend framework for API endpoints
+
+### Internal Dependencies
+
+1. **Physical AI Textbook Content** - Immutable source for RAG system
+2. **Existing Docusaurus Configuration** - Integration points for chatbot embed
+
+### Assumptions
+
+1. **Network Connectivity** - Stable internet connection for API calls to OpenAI and vector database
+2. **Textbook Content Stability** - Textbook content remains unchanged during development
+3. **User Adoption** - Users are willing to adopt chatbot for textbook queries
+4. **API Rate Limits** - External APIs (OpenAI) have sufficient rate limits for expected usage
+5. **Vector DB Performance** - Qdrant can handle expected query load within 2-second response requirement
+
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**

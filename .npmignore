@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+
+# Git-related
+.git/
+.gitignore
+
+# IDE-related
+.vscode/
+.idea/
+
+# OS-related
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.lerna-debug.log*
+
+# Runtime
+.pid
+.pki
+
+# Coverage
+coverage/
+.nyc_output/
+.nyc_report/
+
+# Docusaurus
+.docusaurus/
+.generated/
+
+# Temporary files
+*.tmp
+*.bak
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env*
+
+# Docker
+Dockerfile*
+.dockerignore
+
+# Backend files (since this is frontend-focused npm)
+backend/
+venv/
+*.py
+*.pyc
+__pycache__/

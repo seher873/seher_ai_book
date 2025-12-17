@@ -1,237 +1,247 @@
 # Tasks: Integrated Read-Only RAG Chatbot for Physical AI Textbook
 
-**Feature**: Integrated Read-Only RAG Chatbot for Physical AI Textbook  
-**Branch**: `001-integrated-rag-chatbot`  
-**Date**: 2025-12-16  
-**Input**: Feature specification, implementation plan, research findings, data models, API contracts
+**Input**: Design documents from `/specs/001-integrated-rag-chatbot/`
+**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-## Overview
+**Tests**: The feature specification does not explicitly request test tasks, but due to the critical nature of accuracy and safety requirements, testing will be included.
 
-This document provides an actionable, dependency-ordered task list for implementing the integrated RAG chatbot feature. Tasks are organized by user story to enable independent implementation and testing, with clear file paths and validation criteria.
+**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
-## Phase 1: Setup
+## Format: `[ID] [P?] [Story] Description`
 
-### Project Initialization
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
+- Include exact file paths in descriptions
 
-- [ ] T001 Create backend directory structure: backend/rag_api/, backend/rag_api/models/, backend/rag_api/services/, backend/rag_api/api/, backend/rag_api/api/v1/, backend/rag_api/db/, backend/rag_api/utils/
-- [ ] T002 Create frontend directory structure: frontend/src/components/, frontend/src/hooks/, frontend/src/services/
-- [ ] T003 Initialize backend project with requirements.txt specifying Python 3.11 compatibility
-- [ ] T004 Initialize virtual environment and install dependencies: fastapi, uvicorn, python-multipart, openai, psycopg[binary,pool], qdrant-client, python-dotenv, pytest, pytest-asyncio, httpx
-- [ ] T005 [P] Add frontend dependencies to package.json: openai, react-markdown
-- [ ] T006 Create environment configuration file (.env) with template for API keys and connection strings
-- [ ] T007 Set up Docker configuration for local development (docker-compose.yml) with Qdrant and PostgreSQL
+## Path Conventions
 
-## Phase 2: Foundational Components
+Based on the project structure from plan.md:
+- **Backend**: `backend/rag_api/`, `backend/tests/`
+- **Frontend**: `frontend/src/`, `frontend/tests/`
+- **Docs**: `specs/001-integrated-rag-chatbot/`
 
-### Database and Vector Store Setup
+---
 
-- [ ] T008 [P] Implement database connection module: backend/rag_api/db/connection.py
-- [ ] T009 [P] Implement Qdrant vector database client: backend/rag_api/db/vector_store.py
-- [ ] T010 Implement session management models: backend/rag_api/models/session.py
-- [ ] T011 Implement query models: backend/rag_api/models/query.py
-- [ ] T012 Implement response models: backend/rag_api/models/response.py
-- [ ] T013 Implement citation models: backend/rag_api/models/citation.py
-- [ ] T014 [P] Implement knowledge chunk models: backend/rag_api/models/knowledge_chunk.py
-- [ ] T015 [P] Implement book corpus models: backend/rag_api/models/book_corpus.py
-- [ ] T016 [P] Create database migration scripts: backend/rag_api/db/migrations.py
-- [ ] T017 [P] Implement data validation utilities: backend/rag_api/utils/validators.py
-- [ ] T018 [P] Implement helper functions: backend/rag_api/utils/helpers.py
+## Phase 1: Setup (Shared Infrastructure)
 
-### Core Services Foundation
+**Purpose**: Project initialization and basic structure
 
-- [ ] T019 [P] Implement embedding service: backend/rag_api/services/embedding_service.py
-- [ ] T020 [P] Implement content filtering service: backend/rag_api/services/content_filter.py
-- [ ] T021 [P] Implement RAG service foundation: backend/rag_api/services/rag_service.py
+- [x] T001 Create backend project structure in backend/rag_api/
+- [x] T002 Initialize Python 3.11 project with FastAPI, OpenAI, Qdrant, and Neon Postgres dependencies
+- [x] T003 [P] Configure linting and formatting tools for Python (black, flake8, mypy)
+- [x] T004 [P] Configure Docker and docker-compose for local development
+- [x] T005 Create frontend component structure in frontend/src/components/
+- [x] T006 Set up environment configuration management with .env files
 
-## Phase 3: User Story 1 - Chat with AI Assistant (Priority: P1)
+---
 
-**Goal**: Students and educators can interact with an AI-powered chatbot that answers questions based on the Physical AI textbook content using Retrieval-Augmented Generation (RAG) technology.
+## Phase 2: Foundational (Blocking Prerequisites)
+
+**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
+
+**⚠️ CRITICAL**: No user story work can begin until this phase is complete
+
+- [x] T007 Setup database schema and migrations framework for Neon Postgres in backend/rag_api/db/
+- [x] T008 [P] Implement core data models (ChatSession, Query, Response) in backend/rag_api/models/
+- [x] T009 [P] Setup API routing and middleware structure in backend/rag_api/api/v1/
+- [x] T010 Create vector database setup for Qdrant with textbook content indexing
+- [x] T011 Configure error handling and logging infrastructure in backend/rag_api/utils/
+- [x] T012 Implement content filtering service using OpenAI Moderation API in backend/rag_api/services/
+- [x] T013 Setup environment configuration for API keys in backend/rag_api/config/
+- [x] T014 [P] Implement base validation functions in backend/rag_api/utils/validators.py
+- [x] T015 Set up API endpoint contracts from contracts/api-contract.yaml
+
+**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
+
+---
+
+## Phase 3: User Story 1 - Chat with AI Assistant (Priority: P1) 🎯 MVP
+
+**Goal**: Enable students and educators to interact with an AI-powered chatbot that answers questions based on the Physical AI textbook content using RAG technology with both full-book corpus and user-selected text modes.
 
 **Independent Test**: Can be fully tested by asking the chatbot questions about Physical AI textbook content and verifying that responses are accurate, well-cited, and helpful.
 
-**Acceptance Criteria**:
-- Given a user has access to the textbook interface, When they click the chatbot icon and type a general question about course content, Then they receive a response grounded in the full book corpus with proper citations.
-- Given a user has selected specific text in the textbook, When they ask the chatbot a question about that selection, Then they receive a response specifically based on the user-selected text with citations to that section.
-- Given a user asks a question outside the scope of textbook content, When they submit the question to the chatbot, Then they receive a response indicating the topic is outside the textbook scope with a suggestion to consult other resources.
+### Tests for User Story 1 ⚠️
 
-### Session Management
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T022 [US1] Implement POST /sessions endpoint: backend/rag_api/api/v1/sessions.py
-- [ ] T023 [US1] Implement session token generation with expiration
-- [ ] T024 [US1] Implement session validation middleware
-- [ ] T025 [US1] Implement automatic session cleanup mechanism
+- [X] T016 [P] [US1] Contract test for POST /chat endpoint in backend/tests/contract/test_chat_api.py
+- [X] T017 [P] [US1] Integration test for full-book corpus query flow in backend/tests/integration/test_full_corpus_query.py
+- [X] T018 [P] [US1] Integration test for user-selected text query flow in backend/tests/integration/test_selected_text_query.py
 
-### Core RAG Implementation
+### Implementation for User Story 1
 
-- [ ] T026 [US1] Implement full-book corpus RAG retrieval in rag_service.py
-- [ ] T027 [US1] Implement user-selected text focused RAG retrieval in rag_service.py
-- [ ] T028 [US1] Integrate OpenAI Assistants API for response generation
-- [ ] T029 [US1] Implement content validation using OpenAI Moderation API
-- [ ] T030 [US1] Implement mandatory citation generation with chapter/section references
+- [x] T019 [P] [US1] Implement RAG service in backend/rag_api/services/rag_service.py
+- [x] T020 [P] [US1] Implement embedding service in backend/rag_api/services/embedding_service.py
+- [x] T021 [US1] Create Citation model in backend/rag_api/models/citation.py
+- [x] T022 [US1] Create KnowledgeChunk model in backend/rag_api/models/knowledge_chunk.py
+- [x] T023 [US1] Implement chat endpoint in backend/rag_api/api/v1/chat.py
+- [x] T024 [US1] Implement session management in backend/rag_api/api/v1/sessions.py
+- [x] T025 [US1] Add validation and error handling for chat endpoints
+- [x] T026 [US1] Implement OpenAI Assistant integration with textbook corpus
+- [x] T027 [US1] Add logging for chat operations
+- [x] T028 [US1] Create frontend RagChatbot component in frontend/src/components/RagChatbot.jsx
+- [x] T029 [US1] Implement useRagChat hook in frontend/src/hooks/useRagChat.js
+- [x] T030 [US1] Create API service for chat communication in frontend/src/services/ragApi.js
 
-### Chat Endpoint Implementation
+**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
-- [ ] T031 [US1] Implement POST /chat endpoint: backend/rag_api/api/v1/chat.py
-- [ ] T032 [US1] Implement request validation for query length and content safety
-- [ ] T033 [US1] Implement response formatting with citations
-- [ ] T034 [US1] Implement error handling for various failure scenarios
-- [ ] T035 [US1] Implement response time monitoring to ensure <2s performance
-
-### Frontend Implementation
-
-- [ ] T036 [US1] Create RagChatbot React component: frontend/src/components/RagChatbot.jsx
-- [ ] T037 [US1] Implement session management in frontend component
-- [ ] T038 [US1] Implement chat UI with message history display
-- [ ] T039 [US1] Implement API communication using ragApi.js service
-- [ ] T040 [US1] Implement citation display in chat responses
-- [ ] T041 [US1] Implement user-selected text context handling
-
-### Frontend API Service
-
-- [ ] T042 [US1] Create ragApi service: frontend/src/services/ragApi.js
-- [ ] T043 [US1] Implement session creation API call
-- [ ] T044 [US1] Implement chat query API call
-- [ ] T045 [US1] Implement error handling for API calls
-
-### Frontend Hook Implementation
-
-- [ ] T046 [US1] Create useRagChat hook: frontend/src/hooks/useRagChat.js
-- [ ] T047 [US1] Implement chat state management
-- [ ] T048 [US1] Implement message history management
-- [ ] T049 [US1] Implement loading and error states
-
-### RAG Service Enhancement
-
-- [ ] T050 [US1] Implement textbook content indexing functionality
-- [ ] T051 [US1] Implement knowledge chunk storage and retrieval
-- [ ] T052 [US1] Implement query embedding and similarity search
-- [ ] T053 [US1] Implement content filtering for both input and output
+---
 
 ## Phase 4: User Story 2 - Navigate to Referenced Content (Priority: P2)
 
-**Goal**: Users can click on citations in chatbot responses to navigate directly to the referenced chapter or section in the textbook, facilitating deeper exploration of topics.
+**Goal**: Enable users to click on citations in chatbot responses to navigate directly to the referenced chapter or section in the textbook, facilitating deeper exploration of topics.
 
 **Independent Test**: Can be tested by asking the chatbot questions that generate responses with citations, then clicking those citations to verify navigation to the correct textbook section.
 
-**Acceptance Criteria**:
-- Given a chatbot response contains a citation to a specific chapter/section, When the user clicks the citation link, Then the textbook navigates to the specified location.
+### Tests for User Story 2 ⚠️
 
-### Textbook Content API Endpoints
+- [X] T031 [P] [US2] Contract test for GET /textbook/chapters endpoint in backend/tests/contract/test_textbook_api.py
+- [X] T032 [P] [US2] Contract test for GET /textbook/chapters/{chapter_number}/sections/{section_number} endpoint in backend/tests/contract/test_textbook_api.py
+- [X] T033 [P] [US2] Integration test for citation navigation in frontend/tests/integration/test_citation_navigation.js
 
-- [ ] T054 [US2] Implement GET /textbook/chapters endpoint: backend/rag_api/api/v1/textbook.py
-- [ ] T055 [US2] Implement GET /textbook/chapters/{chapter_number}/sections/{section_number} endpoint
-- [ ] T056 [US2] Implement textbook content retrieval service
-- [ ] T057 [US2] Implement URL generation for textbook sections in citations
+### Implementation for User Story 2
 
-### Frontend Citation Navigation
+- [X] T034 [P] [US2] Create BookCorpus model in backend/rag_api/models/book_corpus.py
+- [X] T035 [US2] Implement textbook chapters endpoint in backend/rag_api/api/v1/textbook.py
+- [X] T036 [US2] Implement textbook section endpoint in backend/rag_api/api/v1/textbook.py
+- [X] T037 [US2] Add chapter/section navigation links to citation model
+- [X] T038 [US2] Enhance frontend RagChatbot component to render clickable citations
+- [X] T039 [US2] Implement navigation functionality in frontend
+- [X] T040 [US2] Add citation URL validation in backend/rag_api/utils/validators.py
 
-- [ ] T058 [US2] Update RagChatbot.jsx to render citations as clickable links
-- [ ] T059 [US2] Implement navigation handling for citation clicks
-- [ ] T060 [US2] Ensure citation URLs are properly formatted and functional
+**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
+
+---
 
 ## Phase 5: User Story 3 - Maintain Conversation Context (Priority: P3)
 
-**Goal**: The chatbot maintains context throughout a conversation, allowing users to ask follow-up questions that reference previous exchanges without repeating information.
+**Goal**: Enable the chatbot to maintain context throughout a conversation, allowing users to ask follow-up questions that reference previous exchanges without repeating information.
 
 **Independent Test**: Can be tested by conducting a multi-turn conversation with the chatbot to verify that follow-up questions are understood in the context of previous exchanges.
 
-**Acceptance Criteria**:
-- Given a user has engaged in a multi-turn conversation, When they ask a follow-up question that references previous discussion, Then the chatbot understands the context and provides a relevant response.
+### Tests for User Story 3 ⚠️
 
-### Conversation Context Management
+- [X] T041 [P] [US3] Integration test for multi-turn conversation context in backend/tests/integration/test_conversation_context.py
+- [X] T042 [P] [US3] Unit test for session history management in backend/tests/unit/test_session_history.py
 
-- [ ] T061 [US3] Enhance query model to include conversation history reference
-- [ ] T062 [US3] Implement conversation history retrieval in rag_service.py
-- [ ] T063 [US3] Update POST /chat endpoint to maintain conversation context
-- [ ] T064 [US3] Implement follow-up question processing in RAG service
-- [ ] T065 [US3] Enhance OpenAI Assistant API integration to include conversation history
+### Implementation for User Story 3
 
-### Frontend Context Management
+- [X] T043 [P] [US3] Enhance Query model to include conversation context in backend/rag_api/models/query.py
+- [X] T044 [US3] Implement conversation history tracking in ChatSession model
+- [X] T045 [US3] Modify RAG service to incorporate conversation history in backend/rag_api/services/rag_service.py
+- [X] T046 [US3] Update OpenAI Assistant integration to include conversation history
+- [X] T047 [US3] Enhance frontend component to display conversation history
+- [X] T048 [US3] Update useRagChat hook to manage conversation context
 
-- [ ] T066 [US3] Update useRagChat.js hook to maintain conversation state
-- [ ] T067 [US3] Implement message history tracking in frontend
-- [ ] T068 [US3] Ensure conversation context persists within session
+**Checkpoint**: All user stories should now be independently functional
 
-## Phase 6: Polish & Cross-Cutting Concerns
+---
 
-### Security & Validation
+## Phase N: Polish & Cross-Cutting Concerns
 
-- [ ] T069 Implement rate limiting for API endpoints
-- [ ] T070 Implement comprehensive input validation and sanitization
-- [ ] T071 Implement content filtering for all user inputs and outputs
-- [ ] T072 Implement secure session management with proper token handling
+**Purpose**: Improvements that affect multiple user stories
 
-### Performance & Optimization
+- [ ] T049 [P] Documentation updates in specs/001-integrated-rag-chatbot/
+- [ ] T050 Code cleanup and refactoring
+- [ ] T051 Performance optimization across all stories
+- [ ] T052 [P] Additional unit tests in backend/tests/unit/ and frontend/tests/
+- [ ] T053 Security hardening for content filtering and rate limiting
+- [ ] T054 Run quickstart.md validation
+- [ ] T055 Add caching mechanisms for improved performance
+- [ ] T056 Implement monitoring and metrics collection
+- [ ] T057 Add comprehensive error handling and graceful failure mechanisms
 
-- [ ] T073 [P] Implement caching layer with Redis for frequently accessed content
-- [ ] T074 [P] Implement pre-computed embeddings for textbook content
-- [ ] T075 [P] Optimize API response times to under 2 seconds
-- [ ] T076 [P] Implement connection pooling for database operations
+---
 
-### Monitoring & Error Handling
+## Dependencies & Execution Order
 
-- [ ] T077 Implement comprehensive logging for all operations
-- [ ] T078 Implement error tracking and reporting mechanisms
-- [ ] T079 [P] Implement circuit breaker patterns for external API calls
-- [ ] T080 [P] Implement monitoring for API performance metrics
+### Phase Dependencies
 
-### Testing & Quality
+- **Setup (Phase 1)**: No dependencies - can start immediately
+- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
+- **User Stories (Phase 3+)**: All depend on Foundational phase completion
+  - User stories can then proceed in parallel (if staffed)
+  - Or sequentially in priority order (P1 → P2 → P3)
+- **Polish (Final Phase)**: Depends on all desired user stories being complete
 
-- [ ] T081 Write unit tests for all model validations
-- [ ] T082 Write unit tests for all service functions
-- [ ] T083 Write integration tests for API endpoints
-- [ ] T084 Write contract tests to verify API compliance with specification
-- [ ] T085 Perform end-to-end testing of all user stories
-- [ ] T086 Perform load testing to ensure performance requirements are met
+### User Story Dependencies
 
-### Documentation & Deployment
+- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
+- **User Story 2 (P2)**: Can start after Foundational (Phase 2) - Depends on US1 components for citation data
+- **User Story 3 (P3)**: Can start after Foundational (Phase 2) - Depends on US1 components for conversation data
 
-- [ ] T087 Update API documentation to match implementation
-- [ ] T088 Create deployment scripts for backend services
-- [ ] T089 Create instructions for frontend component integration with Docusaurus
-- [ ] T090 Update README with setup and deployment instructions
+### Within Each User Story
 
-## Dependencies
+- Tests (if included) MUST be written and FAIL before implementation
+- Models before services
+- Services before endpoints
+- Core implementation before integration
+- Story complete before moving to next priority
 
-### User Story Completion Order
-1. User Story 1 (P1) - Chat with AI Assistant: Must be completed first as it provides the core functionality
-2. User Story 2 (P2) - Navigate to Referenced Content: Depends on User Story 1 for citation generation
-3. User Story 3 (P3) - Maintain Conversation Context: Can be implemented in parallel with User Story 2 after User Story 1 completion
+### Parallel Opportunities
 
-### Task Dependencies
-- T022 requires T008 and T009 (database connections)
-- T031 depends on T022 (chat endpoint needs session management)
-- T054 depends on T014 (textbook endpoint needs models)
-- T036 depends on T042 (component needs API service)
+- All Setup tasks marked [P] can run in parallel
+- All Foundational tasks marked [P] can run in parallel (within Phase 2)
+- Once Foundational phase completes, all user stories can start in parallel (if team capacity allows)
+- All tests for a user story marked [P] can run in parallel
+- Models within a story marked [P] can run in parallel
+- Different user stories can be worked on in parallel by different team members
 
-## Parallel Execution Examples
+---
 
-### Per User Story
-- **User Story 1**: Tasks T026-T030 (RAG implementation) can run in parallel with T031-T035 (API endpoints), and with T036-T045 (frontend components)
-- **User Story 2**: Tasks T054-T055 (API endpoints) can run in parallel with T058-T060 (frontend citation handling)
-- **User Story 3**: Tasks can run in parallel with User Story 2 after User Story 1 completion
+## Parallel Example: User Story 1
+
+```bash
+# Launch all tests for User Story 1 together:
+Task: "Contract test for POST /chat endpoint in backend/tests/contract/test_chat_api.py"
+Task: "Integration test for full-book corpus query flow in backend/tests/integration/test_full_corpus_query.py"
+Task: "Integration test for user-selected text query flow in backend/tests/integration/test_selected_text_query.py"
+
+# Launch all models for User Story 1 together:
+Task: "Create Citation model in backend/rag_api/models/citation.py"
+Task: "Create KnowledgeChunk model in backend/rag_api/models/knowledge_chunk.py"
+```
+
+---
 
 ## Implementation Strategy
 
-### MVP Scope (User Story 1 Only)
-- Complete Phase 1 (Setup) and Phase 2 (Foundational Components)
-- Complete User Story 1 (T022-T053) with basic functionality
-- Basic chat functionality with full-book corpus queries and citations
-- No focused text queries or conversation context initially
+### MVP First (User Story 1 Only)
+
+1. Complete Phase 1: Setup
+2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
+3. Complete Phase 3: User Story 1
+4. **STOP and VALIDATE**: Test User Story 1 independently
+5. Deploy/demo if ready
 
 ### Incremental Delivery
-1. MVP: Core chat functionality with citations
-2. Add user-selected text queries
-3. Add conversation context
-4. Add citation navigation
-5. Add polish and optimization
 
-## Validation Criteria
+1. Complete Setup + Foundational → Foundation ready
+2. Add User Story 1 → Test independently → Deploy/Demo (MVP!)
+3. Add User Story 2 → Test independently → Deploy/Demo
+4. Add User Story 3 → Test independently → Deploy/Demo
+5. Each story adds value without breaking previous stories
 
-Each phase should result in an independently testable increment:
-- Setup phase: Working project structure with dependencies
-- Foundational phase: Working database and model components
-- User Story 1: Complete chat functionality with citations
-- User Story 2: Citation navigation working
-- User Story 3: Conversation context maintained
-- Final phase: Production-ready system with monitoring and optimization
+### Parallel Team Strategy
+
+With multiple developers:
+
+1. Team completes Setup + Foundational together
+2. Once Foundational is done:
+   - Developer A: User Story 1
+   - Developer B: User Story 2
+   - Developer C: User Story 3
+3. Stories complete and integrate independently
+
+---
+
+## Notes
+
+- [P] tasks = different files, no dependencies
+- [Story] label maps task to specific user story for traceability
+- Each user story should be independently completable and testable
+- Verify tests fail before implementing
+- Commit after each task or logical group
+- Stop at any checkpoint to validate story independently
+- Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
