@@ -77,6 +77,11 @@ const sidebars = {
     },
     {
       type: 'link',
+      label: 'AI Physics Playground',
+      href: '/docs/physics-playground',
+    },
+    {
+      type: 'link',
       label: 'Lab Exercises',
       href: '/docs/labs',
     },
