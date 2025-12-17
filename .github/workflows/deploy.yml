@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Setup Node.js and Deploy
 
 on:
   push:
