@@ -142,8 +142,8 @@ Based on the project structure from plan.md:
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T049 [P] Documentation updates in specs/001-integrated-rag-chatbot/
-- [ ] T050 Code cleanup and refactoring
+- [X] T049 [P] Documentation updates in specs/001-integrated-rag-chatbot/
+- [X] T050 Code cleanup and refactoring
 - [ ] T051 Performance optimization across all stories
 - [ ] T052 [P] Additional unit tests in backend/tests/unit/ and frontend/tests/
 - [ ] T053 Security hardening for content filtering and rate limiting
