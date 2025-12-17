@@ -2,7 +2,7 @@
 
 ## Node.js Version Decision
 
-**Decision**: Use Node.js v18.17.0 or later
+**Decision**: Use Node.js v20 or later
 **Rationale**: This version provides long-term support (LTS) and compatibility with Docusaurus v3.x. It includes performance improvements and security updates that are important for the content creation interface.
 **Alternatives considered**: 
 - Node.js v20.x: Newer but may have compatibility issues with some Docusaurus plugins

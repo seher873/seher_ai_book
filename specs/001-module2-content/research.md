@@ -1,7 +1,7 @@
 # Research: Module 2 Content Generation
 
 ## Language/Version Decision
-- Decision: Use Node.js v18+ for compatibility with Docusaurus
+- Decision: Use Node.js v20+ for compatibility with Docusaurus
 - Rationale: The project already uses Docusaurus which requires Node.js. This ensures consistency with existing infrastructure.
 - Alternatives considered: Python, Go - rejected because they don't integrate well with the existing Docusaurus setup
 

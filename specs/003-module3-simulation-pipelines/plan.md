@@ -11,7 +11,7 @@ Generate comprehensive content for Module 3 of the AI textbook focusing on NVIDI
 
 ## Technical Context
 
-**Language/Version**: Node.js v18+ (for Docusaurus compatibility)
+**Language/Version**: Node.js v20+ (for Docusaurus compatibility)
 **Primary Dependencies**: Docusaurus v3.x, React, Markdown/CommonMark
 **Storage**: File system (Markdown files) with Git version control
 **Testing**: Jest for backend, React Testing Library for frontend components

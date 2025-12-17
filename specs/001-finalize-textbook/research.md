@@ -94,6 +94,6 @@ Based on research findings, the following technology stack was confirmed:
 
 - **Documentation Platform**: Docusaurus v3.x with React components
 - **Content Format**: Markdown/CommonMark with MDX for interactivity
-- **Development Environment**: Node.js v18+ for compatibility
+- **Development Environment**: Node.js v20+ for compatibility
 - **Version Control**: Git with conventional commit messages
 - **Infrastructure**: Cloud hosting for notebooks with CDN for static content

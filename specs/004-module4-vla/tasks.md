@@ -33,7 +33,7 @@ description: "Task list for Module 4: LLMs + Robotics: Voice-to-Action Systems"
 
 - [X] T001 Create module-4 directory structure in docs/
 - [X] T002 [P] Set up initial module-4 markdown files following 6-chapter structure
-- [X] T003 Verify Docusaurus development environment with Node.js v18.17.0+ and Docusaurus v3.1.0+
+- [X] T003 Verify Docusaurus development environment with Node.js v20+ and Docusaurus v3.1.0+
 
 ---
 

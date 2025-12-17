@@ -11,7 +11,7 @@ Implementation of a comprehensive glossary and Appendix B dedicated to Chatbot/R
 
 ## Technical Context
 
-**Language/Version**: Markdown (CommonMark specification), JavaScript ES2020+, Node.js v18.17.0+
+**Language/Version**: Markdown (CommonMark specification), JavaScript ES2020+, Node.js v20+
 **Primary Dependencies**: Docusaurus v3.x, React, Bootstrap CSS, Material Design components
 **Storage**: File-based (Markdown files in content/ and docs/ directories), no database required
 **Testing**: Manual testing of content display and navigation, accessibility checks

@@ -6,7 +6,7 @@ This guide provides instructions for implementing and working with Module 4 cont
 
 ## Prerequisites
 
-- Node.js v18.17.0 or higher
+- Node.js v20 or higher
 - Docusaurus v3.1.0 or higher
 - Basic understanding of LLMs, robotics, and ROS 2 concepts
 - Markdown/CommonMark knowledge
@@ -25,7 +25,7 @@ Module 4 consists of 6 chapters:
 ## Setting Up the Development Environment
 
 ### System Requirements
-- Node.js v18.17.0 or higher
+- Node.js v20 or higher
 - NPM or Yarn package manager
 - Git for version control
 - Text editor with Markdown support

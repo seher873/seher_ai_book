@@ -18,7 +18,7 @@
 -->
 
 **Language/Version**: Markdown (CommonMark specification), Docusaurus v3.x
-**Primary Dependencies**: Node.js v18+, npm/yarn, Git for version control
+**Primary Dependencies**: Node.js v20+, npm/yarn, Git for version control
 **Storage**: Git repository with content stored as markdown files in documentation structure
 **Testing**: Content accuracy verification by subject matter experts, peer review processes, reader feedback mechanisms
 **Target Platform**: Web-based documentation platform (Docusaurus), with PDF generation capability

@@ -8,7 +8,7 @@ This quickstart guide provides a step-by-step introduction to implementing the n
 
 Before starting with the implementation, ensure you have:
 
-- Node.js v18+ installed on your system
+- Node.js v20+ installed on your system
 - Git for version control
 - Docusaurus v3.x knowledge
 - Access to a cloud notebook environment (e.g., Google Colab, AWS SageMaker Notebooks)

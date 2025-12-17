@@ -11,7 +11,7 @@ This plan addresses the implementation of assessments, lab architecture, hardwar
 
 ## Technical Context
 
-**Language/Version**: Markdown/CommonMark (for content), Node.js v18.17.0+ (for Docusaurus compatibility) + Docusaurus v3.1.0+
+**Language/Version**: Markdown/CommonMark (for content), Node.js v20+ (for Docusaurus compatibility) + Docusaurus v3.1.0+
 **Primary Dependencies**: Docusaurus v3.x, React, Markdown/CommonMark, Git for version control
 **Storage**: File system (Markdown files) with Git version control
 **Testing**: Manual review of generated documentation and functionality checks

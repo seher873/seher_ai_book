@@ -18,7 +18,7 @@ Generate comprehensive content for Module 2 of the AI textbook covering Digital 
   the iteration process.
 -->
 
-**Language/Version**: Node.js v18+ (for Docusaurus compatibility)
+**Language/Version**: Node.js v20+ (for Docusaurus compatibility)
 **Primary Dependencies**: Docusaurus v3.x, React, Markdown/CommonMark, Git integration
 **Storage**: File system (Markdown files) with Git version control
 **Testing**: Jest for backend, React Testing Library for frontend components

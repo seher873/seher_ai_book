@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js v18+ installed
+- Node.js v20+ installed
 - Git installed and configured
 - Access to the project repository
 - Appropriate user role (author, editor, or admin)
