@@ -8,10 +8,10 @@ const config = {
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://seher873.github.io', // Replace with your GitHub username
+  url: 'https://seherkhan.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/seher_ai_book/', // GitHub pages serves pages at /<repository-name>/
+  baseUrl: '/seher_ai_book/',
   // For GitHub Pages deployment
   trailingSlash: true, // For GitHub Pages compatibility
   onBrokenLinks: 'throw',
