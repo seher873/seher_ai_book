@@ -1,10 +1,26 @@
 const express = require('express');
 const path = require('path');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Serve static files from the 'build' directory
 app.use(express.static(path.join(__dirname, 'build')));
+
+// Proxy API requests to the backend chat service
+app.use('/api', createProxyMiddleware({
+  target: process.env.CHATBOT_API_URL || 'http://localhost:8000',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api': '', // Remove /api prefix when forwarding to backend
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    console.log(`Proxying ${req.method} ${req.url} to ${process.env.CHATBOT_API_URL || 'http://localhost:8000'}`);
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`Received response from backend: ${proxyRes.statusCode} for ${req.url}`);
+  }
+}));
 
 // Specific routes for our pages
 app.get('/', (req, res) => {
@@ -31,4 +47,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   - Logo: /img/logoo.png`);
   console.log(`   - Dashboard: /img/roobot.png`);
   console.log(`   - Homepage: /img/robot.png`);
+  console.log(`🔗 API requests to /api will be forwarded to ${process.env.CHATBOT_API_URL || 'http://localhost:8000'}`);
 });

@@ -14,9 +14,6 @@ const config = {
   baseUrl: '/',
   // For GitHub Pages deployment
   trailingSlash: true, // For GitHub Pages compatibility
-  onBrokenLinks: 'ignore',
-  onBrokenMarkdownLinks: 'warn',
-
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'seher873', // Usually your GitHub org/user name.

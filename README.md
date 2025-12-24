@@ -40,6 +40,19 @@ To run the textbook locally:
 
 5. Open [http://localhost:3000](http://localhost:3000) to view the textbook in your browser.
 
+## Chatbot Integration
+
+The textbook includes an AI chatbot that can answer questions about the textbook content using a Retrieval-Augmented Generation (RAG) system. To use the full chatbot functionality:
+
+1. Set up the backend:
+   - Navigate to the backend directory: `cd backend`
+   - Install Python dependencies: `pip install -r requirements.txt`
+   - Set up environment variables in a `.env` file with your API keys
+   - Ingest the textbook content: `python ingest_docs.py`
+   - Start the backend: `python -m uvicorn main:app --reload`
+
+2. The frontend will automatically connect to the backend through API proxying.
+
 ## Features
 
 The textbook includes the following features to enhance learning:
@@ -50,6 +63,7 @@ The textbook includes the following features to enhance learning:
 - **Glossary**: Comprehensive definitions of AI and robotics terminology
 - **Appendices**: Supplementary material for deeper exploration of advanced topics
 - **Hardware Guidelines**: Recommendations for computing requirements and setup
+- **AI Chatbot**: Interactive assistant that can answer questions about textbook content using RAG (Retrieval-Augmented Generation)
 
 ## Structure
 

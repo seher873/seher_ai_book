@@ -1,4 +1,4 @@
-import React from 'react';
+
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 
@@ -38,7 +38,7 @@ export default function Home() {
               />
             </div>
             
-            <p style={{fontSize: '1.1rem', marginBottom: '30px', lineHeight: '1.6'}}>
+            <p style={{fontSize: '1.1rem', marginBottom: '30px', lineHeight: '1.6',textDecorationColor: '#da27e0'}}>
               Welcome to the cutting-edge world of Physical AI and Humanoid Robotics! 
               This comprehensive textbook serves as your complete guide to developing 
               intelligent systems that interact with the real world through robotic platforms.
