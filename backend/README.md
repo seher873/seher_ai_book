@@ -1,54 +1,38 @@
-# RAG Chatbot Backend
+# Physical AI Textbook RAG Chatbot Backend
 
-This is a backend service for a Retrieval-Augmented Generation (RAG) chatbot that uses Qdrant for vector storage and Cohere for embeddings.
+This is the backend for a RAG (Retrieval-Augmented Generation) chatbot that works with the Physical AI & Humanoid Robotics textbook.
 
-## Features
+## Deployment on Hugging Face Spaces
 
-- FastAPI-based API server
-- Vector search using Qdrant
-- Text embeddings using Cohere
-- RAG (Retrieval-Augmented Generation) functionality
+This repository is configured to be deployed on Hugging Face Spaces using Docker.
 
-## Requirements
+### Environment Variables Required
 
-- Python 3.8+
-- Dependencies listed in `requirements.txt`
+Your Space will need the following environment variables set in the Secrets section:
 
-## Environment Variables
+- `COHERE_API_KEY`: Your Cohere API key for embeddings
+- `OPENROUTER_API_KEY`: Your OpenRouter API key for generation
+- `QDRANT_URL`: Your Qdrant database URL
+- `QDRANT_API_KEY`: Your Qdrant API key
 
-Create a `.env` file with the following variables:
+### How It Works
 
-```env
-QDRANT_URL=your_qdrant_url
-QDRANT_API_KEY=your_qdrant_api_key
-COHERE_API_KEY=your_cohere_api_key
-OPENROUTER_API_KEY=your_openrouter_api_key  # Optional, if using OpenRouter
-```
+1. The backend uses FastAPI to serve the RAG chatbot API
+2. It connects to Qdrant for vector storage and retrieval
+3. It uses Cohere for embeddings and OpenRouter for response generation
+4. The API endpoints include:
+   - `/` - Health check endpoint
+   - `/chat` - Main chat endpoint for RAG queries
+   - `/ingest` - Endpoint for ingesting documents
+   - `/health` - Health check endpoint
 
-## Setup
+### Architecture
 
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+The RAG system works as follows:
 
-2. Set up your environment variables in a `.env` file
-
-3. Run the server:
-   ```bash
-   uvicorn retry_rag_api_port8002:app --host 0.0.0.0 --port 8002
-   ```
-
-## API Endpoints
-
-- `POST /query` - Query the RAG system
-  - Request: `{"query": "your question"}`
-  - Response: `{"results": ["chunk1 text", "chunk2 text", "chunk3 text"]}`
-
-- `GET /health` - Check server health
-
-## Scripts
-
-- `ingest_docs.py` - Script to ingest documents into Qdrant
-- `main.py` - Main application file
-- `retry_rag_api_port8002.py` - Production-ready RAG API server
+1. User Query
+2. Embedding Generation with Cohere
+3. Vector Search in Qdrant
+4. Context Retrieval
+5. Response Generation with OpenRouter
+6. RAG Response
