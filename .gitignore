@@ -190,3 +190,7 @@ Logs/
 .qwen/.venv/
 .venv/
 .qwen/
+
+# Database files
+*.db
+*.db-journal
