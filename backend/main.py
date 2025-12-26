@@ -12,6 +12,7 @@ from qdrant_client.http import models
 import openai
 from dotenv import load_dotenv
 import logging
+from backend.auth.main import init_auth_routes
 
 # Load environment variablesrun 
 
@@ -21,23 +22,31 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize services
-if not os.getenv("COHERE_API_KEY"):
-    raise RuntimeError("COHERE_API_KEY missing")
-if not os.getenv("OPENROUTER_API_KEY"):
-    raise RuntimeError("OPENROUTER_API_KEY missing")
-if not os.getenv("QDRANT_URL") or not os.getenv("QDRANT_API_KEY"):
-    raise RuntimeError("QDRANT_URL and QDRANT_API_KEY missing")
+# Initialize services (will be configured later in startup event)
+cohere_client = None
+openai_client = None
+qdrant_client = None
 
-cohere_client = cohere.Client(os.getenv("COHERE_API_KEY"))
-openai_client = openai.OpenAI(
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    base_url="https://openrouter.ai/api/v1",
-)
-qdrant_client = qdrant_client.QdrantClient(
-    url=os.getenv("QDRANT_URL"),
-    api_key=os.getenv("QDRANT_API_KEY")
-)
+def initialize_services():
+    """Initialize external services with environment variables"""
+    global cohere_client, openai_client, qdrant_client
+
+    if not os.getenv("COHERE_API_KEY"):
+        raise RuntimeError("COHERE_API_KEY missing")
+    if not os.getenv("OPENROUTER_API_KEY"):
+        raise RuntimeError("OPENROUTER_API_KEY missing")
+    if not os.getenv("QDRANT_URL") or not os.getenv("QDRANT_API_KEY"):
+        raise RuntimeError("QDRANT_URL and QDRANT_API_KEY missing")
+
+    cohere_client = cohere.Client(os.getenv("COHERE_API_KEY"))
+    openai_client = openai.OpenAI(
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        base_url="https://openrouter.ai/api/v1",
+    )
+    qdrant_client = qdrant_client.QdrantClient(
+        url=os.getenv("QDRANT_URL"),
+        api_key=os.getenv("QDRANT_API_KEY")
+    )
 
 # RAG Architecture Diagram:
 # 
@@ -69,6 +78,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Initialize authentication routes
+init_auth_routes(app)
+
 # Constants
 COLLECTION_NAME = "seher_robotic_book_netlify_app"
 EMBEDDING_MODEL = "embed-english-v3.0"
@@ -88,6 +100,16 @@ class Document(BaseModel):
     content: str
     title: Optional[str] = None
     path: Optional[str] = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services when the app starts"""
+    try:
+        initialize_services()
+        logger.info("✓ All services initialized successfully")
+    except Exception as e:
+        logger.error(f"✗ Failed to initialize services: {e}")
+        raise
 
 @app.get("/")
 def read_root():
