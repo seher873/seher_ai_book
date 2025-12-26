@@ -3,13 +3,13 @@ import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Link from '@docusaurus/Link';
-import { useAuth } from '../components/Auth/AuthProvider';
+import { useAuth } from '../auth-client';
 
 export default function Dashboard() {
   const {siteConfig} = useDocusaurusContext();
-  const { user, loading } = useAuth();
+  const { session, isPending } = useAuth();
 
-  if (loading) {
+  if (isPending) {
     return (
       <Layout
         title={`Dashboard - ${siteConfig.title}`}
@@ -29,7 +29,7 @@ export default function Dashboard() {
     );
   }
 
-  if (!user) {
+  if (!session) {
     // Redirect to login if not authenticated
     window.location.href = '/auth/login';
     return null;
@@ -43,7 +43,7 @@ export default function Dashboard() {
         <div className="row">
           <div className="col col--12">
             <div style={{textAlign: 'center', padding: '40px 20px', backgroundColor: '#f9f9f9', borderRadius: '8px', marginBottom: '30px'}}>
-              <h1 style={{color: '#da27e0', fontWeight: 'bold', fontSize: '2.5rem'}}>Welcome, {user.name}!</h1>
+              <h1 style={{color: '#da27e0', fontWeight: 'bold', fontSize: '2.5rem'}}>Welcome, {session.user.name}!</h1>
               <p style={{fontSize: '1.2rem', color: '#333'}}><em>Your central hub for learning and tracking progress</em></p>
             </div>
 

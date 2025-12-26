@@ -1,6 +1,6 @@
 // src/components/Auth/Signup.jsx
 import React, { useState } from 'react';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '../../auth-client';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -11,12 +11,12 @@ const Signup = () => {
   const [softwareLanguages, setSoftwareLanguages] = useState('');
   const [hardwareExperience, setHardwareExperience] = useState('');
   const [hardwareTools, setHardwareTools] = useState('');
-  const { signup, error } = useAuth();
+  const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       alert("Passwords don't match");
       return;
@@ -24,28 +24,31 @@ const Signup = () => {
 
     try {
       setLoading(true);
-      
+
       // Parse the languages and tools as arrays
       const softwareLangArray = softwareLanguages.split(',').map(lang => lang.trim()).filter(lang => lang);
       const hardwareToolsArray = hardwareTools.split(',').map(tool => tool.trim()).filter(tool => tool);
-      
-      await signup(
+
+      await signUp.email({
         email,
         password,
         name,
-        {
-          level: softwareLevel,
-          languages: softwareLangArray
-        },
-        {
-          experience: hardwareExperience,
-          tools: hardwareToolsArray
+        profile: {
+          software_background: {
+            level: softwareLevel,
+            languages: softwareLangArray
+          },
+          hardware_background: {
+            experience: hardwareExperience,
+            tools: hardwareToolsArray
+          }
         }
-      );
-      
+      });
+
       alert('Signup successful!');
     } catch (err) {
       console.error('Signup error:', err);
+      alert(err.message || 'An error occurred during signup');
     } finally {
       setLoading(false);
     }
@@ -95,7 +98,7 @@ const Signup = () => {
             required
           />
         </div>
-        
+
         {/* Software Background */}
         <div className="form-group">
           <h3>Software Background</h3>
@@ -116,7 +119,7 @@ const Signup = () => {
             placeholder="e.g. Python, JavaScript, C++"
           />
         </div>
-        
+
         {/* Hardware Background */}
         <div className="form-group">
           <h3>Hardware Background</h3>
@@ -137,12 +140,10 @@ const Signup = () => {
             placeholder="e.g. Arduino, Raspberry Pi, ROS"
           />
         </div>
-        
+
         <button type="submit" disabled={loading}>
           {loading ? 'Signing up...' : 'Sign Up'}
         </button>
-        
-        {error && <div className="error-message">{error}</div>}
       </form>
     </div>
   );

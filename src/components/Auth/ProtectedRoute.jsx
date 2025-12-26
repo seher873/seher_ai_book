@@ -1,12 +1,12 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '../../auth-client';
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { session, isPending } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (isPending) {
     return (
       <div style={{
         display: 'flex',
@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!user) {
+  if (!session) {
     // Redirect to login page with return url
     return <Navigate to={`/auth/login?return=${location.pathname}`} replace />;
   }

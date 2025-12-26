@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from 'better-auth/react';
+import { useAuth } from '../../auth-client';
 
 const Login = ({ onSwitchToSignup }) => {
   const [email, setEmail] = useState('');
@@ -9,16 +9,16 @@ const Login = ({ onSwitchToSignup }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       const result = await signIn.email({
         email,
         password,
-        callbackURL: '/dashboard', // Redirect after login
+        redirectTo: '/dashboard', // Redirect after login
       });
-      
-      if (!result) {
-        setError('Login failed. Please try again.');
+
+      if (result?.error) {
+        setError(result.error.message || 'Login failed. Please try again.');
       }
     } catch (err) {
       setError(err.message || 'An error occurred during login');
@@ -54,8 +54,8 @@ const Login = ({ onSwitchToSignup }) => {
       </form>
       <div className="auth-switch">
         Don't have an account?{' '}
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={onSwitchToSignup}
           className="switch-btn"
         >

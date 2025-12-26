@@ -1,11 +1,11 @@
 // src/components/Auth/Signin.jsx
 import React, { useState } from 'react';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '../../auth-client';
 
 const Signin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signin, error } = useAuth();
+  const { signIn } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -13,10 +13,20 @@ const Signin = () => {
 
     try {
       setLoading(true);
-      await signin(email, password);
-      alert('Signin successful!');
+      const result = await signIn.email({
+        email,
+        password,
+        redirectTo: '/dashboard', // Redirect after login
+      });
+
+      if (result?.error) {
+        alert(result.error.message || 'Signin failed. Please try again.');
+      } else {
+        alert('Signin successful!');
+      }
     } catch (err) {
       console.error('Signin error:', err);
+      alert(err.message || 'An error occurred during signin');
     } finally {
       setLoading(false);
     }
@@ -49,7 +59,6 @@ const Signin = () => {
         <button type="submit" disabled={loading}>
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
-        {error && <div className="error-message">{error}</div>}
       </form>
     </div>
   );

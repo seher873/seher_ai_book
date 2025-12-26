@@ -1,14 +1,14 @@
 import React from 'react';
 import OriginalLayout from '@theme-original/Layout';
 import BrowserOnly from '@docusaurus/BrowserOnly';
-import { AuthProvider } from '../components/Auth/AuthProvider';
+import { authClient } from '../auth-client';
 
 import { ChatbotProvider } from '../components/Chatbot/ChatbotContext';
 import ChatbotWrapper from '../components/Chatbot/ChatbotWrapper';
 
 function Layout(props) {
   return (
-    <AuthProvider>
+    <authClient.Provider>
       <ChatbotProvider>
         <OriginalLayout {...props}>
           {props.children}
@@ -19,7 +19,7 @@ function Layout(props) {
 
         </OriginalLayout>
       </ChatbotProvider>
-    </AuthProvider>
+    </authClient.Provider>
   );
 }
 

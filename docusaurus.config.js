@@ -105,6 +105,16 @@ const config = {
             position: 'left',
           },
           {
+            to: '/auth/login',
+            label: 'Login',
+            position: 'right',
+          },
+          {
+            to: '/auth/signup',
+            label: 'Sign Up',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/seher873/seher_ai_book',
             label: 'GitHub',
             position: 'right',

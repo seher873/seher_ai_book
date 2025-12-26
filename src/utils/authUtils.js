@@ -1,15 +1,15 @@
 // Utility functions for authentication
-import { useAuth } from '../components/Auth/AuthProvider';
+import { useAuth } from '../auth-client';
 
 // Custom hook to access authentication status
 export const useAuthStatus = () => {
-  const { user, loading, error } = useAuth();
-  
+  const { session, isPending } = useAuth();
+
   return {
-    isAuthenticated: !!user,
-    user,
-    loading,
-    error
+    isAuthenticated: !!session,
+    user: session?.user,
+    loading: isPending,
+    error: null
   };
 };
 
@@ -17,7 +17,7 @@ export const useAuthStatus = () => {
 export const withAuth = (Component) => {
   return function AuthenticatedComponent(props) {
     const { isAuthenticated, loading, user } = useAuthStatus();
-    
+
     if (loading) {
       return (
         <div style={{
@@ -31,13 +31,13 @@ export const withAuth = (Component) => {
         </div>
       );
     }
-    
+
     if (!isAuthenticated) {
       // Redirect to login
       window.location.href = '/auth/login';
       return null;
     }
-    
+
     return <Component {...props} user={user} />;
   };
 };
