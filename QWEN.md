@@ -208,16 +208,3 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
-
-## Active Technologies
-- Markdown (CommonMark specification), Docusaurus v3.x + Node.js v18+, npm/yarn, Git for version control (001-physical-ai-textbook)
-- Git repository with content stored as markdown files in documentation structure (001-physical-ai-textbook)
-- Node.js v18+ (for Docusaurus compatibility) + Docusaurus v3.x, React, Markdown/CommonMark, Git integration (001-module2-content)
-- File system (Markdown files) with Git version control (001-module2-content)
-- Markdown/CommonMark (for content), Node.js v18.17.0+ (for Docusaurus compatibility) + Docusaurus v3.1.0+, React, Markdown/CommonMark (004-module4-vla)
-- Markdown/CommonMark (for content), Node.js v18.17.0+ (for Docusaurus compatibility) + Docusaurus v3.1.0+ + Docusaurus v3.x, React, Markdown/CommonMark, Git for version control (001-finalize-textbook)
-- Markdown (CommonMark specification), JavaScript ES2020+, Node.js v18.17.0+ + Docusaurus v3.x, React, Bootstrap CSS, Material Design components (006-glossary-appendix)
-- File-based (Markdown files in content/ and docs/ directories), no database required (006-glossary-appendix)
-
-## Recent Changes
-- 001-physical-ai-textbook: Added Markdown (CommonMark specification), Docusaurus v3.x + Node.js v18+, npm/yarn, Git for version control

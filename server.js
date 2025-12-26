@@ -1,11 +1,15 @@
 const express = require('express');
 const path = require('path');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const authRoutes = require('./server/auth.js'); // Import authentication routes
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Serve static files from the 'build' directory
 app.use(express.static(path.join(__dirname, 'build')));
+
+// Mount authentication routes
+app.use(authRoutes);
 
 // Proxy API requests to the backend chat service
 app.use('/api', createProxyMiddleware({

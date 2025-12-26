@@ -28,10 +28,12 @@ except Exception as e:
 
 try:
     # Initialize Qdrant client with specific settings for cloud
+    # Using https=True for cloud instances
     qdrant_client = QdrantClient(
         url=QDRANT_URL,
         api_key=QDRANT_API_KEY,
-        timeout=30
+        timeout=60,  # Increased timeout
+        https=True   # Explicitly set for cloud
     )
     logger.info("✓ Qdrant client initialized")
 except Exception as e:
@@ -41,16 +43,28 @@ except Exception as e:
 # Create or verify collection
 try:
     # Check if collection exists
+    collection_exists = False
     try:
         qdrant_client.get_collection("book_docs")
         logger.info("✓ Collection 'book_docs' already exists")
-    except:
+        collection_exists = True
+    except Exception as e:
+        logger.info(f"Collection 'book_docs' does not exist: {e}")
+        collection_exists = False
+
+    if not collection_exists:
         # Create collection with cosine distance
         qdrant_client.recreate_collection(
             collection_name="book_docs",
             vectors_config=models.VectorParams(size=1024, distance=models.Distance.COSINE),
         )
         logger.info("✓ Collection 'book_docs' created")
+    else:
+        logger.info("✓ Using existing collection 'book_docs'")
+
+    # Test that we can perform a simple operation
+    collection_info = qdrant_client.get_collection("book_docs")
+    logger.info(f"✓ Collection info retrieved, vectors count: {collection_info.points_count}")
 except Exception as e:
     logger.error(f"✗ Collection operation failed: {e}")
     raise
