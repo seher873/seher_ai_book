@@ -1,6 +1,10 @@
 import os
 import requests
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Load environment variables
 QDRANT_URL = os.getenv("QDRANT_URL")
