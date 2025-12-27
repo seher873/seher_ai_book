@@ -1,0 +1,148 @@
+<!-- SYNC IMPACT REPORT
+Version change: 1.0.0 -> 1.0.1
+Modified principles: Filled all placeholders with project-specific content
+Added sections: All sections populated with Physical AI Textbook project details
+Removed sections: None
+Templates requiring updates:
+- .specify/templates/plan-template.md ✅ aligned
+- .specify/templates/spec-template.md ✅ aligned
+- .specify/templates/tasks-template.md ✅ aligned
+Runtime docs: README.md ✅ already documented
+Follow-up TODOs: None
+-->
+
+# Physical AI & Humanoid Robotics Textbook Constitution
+
+## Core Principles
+
+### I. Content Accuracy (NON-NEGOTIABLE)
+All AI-related content MUST be factually accurate, properly sourced, and reviewed before publication. Information MUST be current, citing recent research and industry developments. All claims about AI capabilities MUST be supported by evidence and distinguish between theoretical possibilities and demonstrated realities. In the RAG context, all chatbot responses MUST be grounded in accurate, verified information from the textbook content.
+
+**Rationale**: Educational content requires the highest standards of accuracy to build trust and provide reliable learning outcomes. Misinformation in AI education can lead to incorrect implementations and understanding.
+
+### II. Educational Clarity
+Content MUST be structured pedagogically with clear learning objectives, progressive complexity, and practical examples. Abstract concepts MUST be explained using accessible analogies and visual aids. Each chapter MUST include exercises, summaries, and next-step connections to maintain educational coherence. The chatbot interface MUST provide clear, understandable responses that align with this educational tone.
+
+**Rationale**: Learning Physical AI and Robotics requires clear progression from fundamentals to advanced topics. Pedagogical structure ensures students can build knowledge systematically.
+
+### III. Ethical Responsibility
+AI ethics MUST be woven throughout all content, addressing bias, privacy, transparency, and societal impacts. Discussions of AI applications MUST include ethical considerations, potential negative consequences, and mitigation strategies. Responsible AI development practices MUST be emphasized over purely technical capabilities. The chatbot MUST embody responsible AI principles, avoiding harmful, biased, or inappropriate responses.
+
+**Rationale**: Physical AI systems interact with the real world and humans directly. Ethical considerations are not optional but fundamental to safe and beneficial AI development.
+
+### IV. Practical Application
+Theoretical knowledge MUST be paired with hands-on examples, code samples, and realistic use cases. All concepts MUST be demonstrated through concrete implementations that readers can reproduce. Chapters MUST bridge the gap between academic understanding and industry application. The RAG system MUST maintain coherent conversation context while accurately retrieving relevant information from the textbook corpus.
+
+**Rationale**: Robotics and Physical AI are applied disciplines. Students need practical skills, not just theoretical knowledge, to succeed in the field.
+
+### V. Test-First Development (NON-NEGOTIABLE)
+All new features MUST follow Test-Driven Development (TDD): Tests written → User approved → Tests fail → Then implement. Red-Green-Refactor cycle MUST be strictly enforced. All code changes MUST include corresponding tests. Integration tests MUST cover API contracts, authentication flows, RAG pipeline, and component interactions.
+
+**Rationale**: Test-first development ensures reliability, reduces bugs, and provides living documentation. For educational software handling user data and AI interactions, testing is critical for trust and stability.
+
+### VI. Accessibility and Inclusion
+Content MUST be accessible to diverse audiences regardless of background, with clear language and supportive learning materials. Different learning styles MUST be accommodated through varied presentation formats (text, diagrams, code, exercises). Inclusive examples and case studies MUST be prioritized. The chatbot MUST serve as an effective educational tool that supplements, not replaces, the textbook content, guiding users with diverse needs effectively.
+
+**Rationale**: Quality education should be available to all learners. Accessibility is both a moral imperative and expands the reach and impact of the textbook.
+
+### VII. System Reliability & Observability
+All technical components MUST maintain consistent availability and performance that enable productive learning experiences. Error handling MUST be graceful, with helpful messages when technical issues occur. The system MUST be resilient to various user inputs while maintaining safety and accuracy standards. Structured logging MUST be implemented for debugging and monitoring. Both the content management and RAG systems MUST be designed with scalability and maintainability in mind.
+
+**Rationale**: Educational platforms must be reliable. Students expect consistent access to materials. Observability enables rapid issue detection and resolution.
+
+## Technology Stack Standards
+
+### Backend
+- **Framework**: FastAPI with Python 3.9+ for high-performance async APIs
+- **Vector Database**: Qdrant for semantic search and RAG retrieval
+- **Embeddings**: Cohere API for document and query embeddings
+- **LLM**: OpenRouter (Gemini 1.5 Flash) for chatbot responses
+- **Database**: SQLite for development, PostgreSQL for production
+- **ORM**: SQLAlchemy for database interactions
+- **Authentication**: JWT tokens with bcrypt password hashing
+- **Testing**: pytest with async support
+
+### Frontend
+- **Framework**: React 18 with Docusaurus 3 for documentation
+- **Authentication**: better-auth library for client-side auth
+- **Server**: Express.js for production serving with backend proxy
+- **Testing**: Jest and React Testing Library
+- **Build**: Babel for transpilation, webpack for bundling
+
+### Deployment
+- **Frontend**: Netlify with GitHub auto-deployment
+- **Backend**: Dockerized deployment on Hugging Face Spaces
+- **Environment**: Separate .env files for frontend and backend configurations
+
+## Quality Standards
+
+All content MUST meet high editorial standards with consistent terminology, proper citations, and professional formatting. Technical content MUST be verified for correctness and reproducibility. All code examples MUST be tested against current library versions and include error handling guidance. The RAG system MUST achieve high precision in information retrieval and relevance of responses, with continuous monitoring and improvement mechanisms.
+
+### Code Quality Requirements
+- All code MUST follow language-specific style guides (PEP 8 for Python, Airbnb for JavaScript)
+- Functions MUST have clear purposes and be under 50 lines when possible
+- Complex logic MUST include inline comments explaining the "why"
+- All public APIs MUST have comprehensive docstrings/JSDoc
+- No hardcoded secrets or credentials in source code
+- All environment-specific configuration MUST use environment variables
+
+## Development Workflow
+
+All contributions MUST undergo technical review by domain experts and editorial review for consistency with style guidelines. Major content changes MUST have outline approval before full implementation. Peer review and reader feedback mechanisms MUST be established for continuous improvement. All RAG system implementations MUST undergo rigorous testing with sample queries covering textbook content breadth and depth.
+
+### Spec-Driven Development Process
+1. **Specification**: All features MUST start with a spec.md defining user stories, requirements, and success criteria
+2. **Planning**: Architecture plan (plan.md) MUST be created identifying technical approach, APIs, and data models
+3. **Tasks**: Actionable tasks (tasks.md) MUST be generated with clear acceptance criteria and test cases
+4. **Implementation**: Follow Red-Green-Refactor TDD cycle for all code changes
+5. **Review**: Code review MUST verify spec compliance, test coverage, and constitution adherence
+6. **Documentation**: All features MUST update relevant documentation and ADRs for significant decisions
+
+### Git Workflow
+- Feature branches named descriptively (e.g., `add-auth-validation`, `fix-rag-timeout`)
+- Conventional commit messages: `type(scope): subject` (feat, fix, chore, refactor, docs, test)
+- Pull requests MUST include description, related issues, testing performed
+- All PRs MUST pass CI checks and require one approval before merge
+- Main branch MUST always be deployable
+
+## Security Requirements
+
+- All user passwords MUST be hashed with bcrypt (minimum 12 rounds)
+- JWT tokens MUST expire and use secure secrets (minimum 32 characters)
+- API endpoints MUST validate and sanitize all user inputs
+- SQL queries MUST use parameterized statements (no string concatenation)
+- Sensitive data MUST NOT be logged or exposed in error messages
+- CORS MUST be configured restrictively for production
+- HTTPS MUST be enforced in production environments
+- Regular dependency updates MUST be performed to patch security vulnerabilities
+
+## Performance Standards
+
+- Frontend initial load MUST be under 3 seconds on 3G connection
+- Backend API responses MUST be under 500ms for p95 latency (excluding LLM calls)
+- RAG retrieval MUST return context within 2 seconds
+- Chatbot responses MUST stream for improved perceived performance
+- Database queries MUST use indexes for frequently accessed data
+- Vector search MUST be optimized for sub-second retrieval on collections under 100k documents
+
+## Governance
+
+This constitution governs all content creation, review, maintenance, code development, and RAG system activities for the Physical AI & Humanoid Robotics Textbook project. All contributors MUST affirm understanding of these principles before participating. Changes to this constitution require consensus among core maintainers and MUST consider impact on all existing content, system capabilities, and development workflows. Regular compliance reviews ensure adherence to stated principles.
+
+### Amendment Process
+1. Propose amendment with rationale and impact analysis
+2. Review by core maintainers
+3. Update constitution version according to semantic versioning:
+   - **MAJOR**: Backward-incompatible governance or principle changes
+   - **MINOR**: New principles or materially expanded guidance
+   - **PATCH**: Clarifications, wording, or non-semantic refinements
+4. Update dependent templates and documentation
+5. Communicate changes to all contributors
+
+### Compliance Review
+- Constitution compliance MUST be verified in all pull request reviews
+- Quarterly audits MUST check adherence to principles across codebase
+- Violations MUST be documented and remediated within one sprint
+- Complexity additions MUST be justified against simplicity principles
+
+**Version**: 1.0.1 | **Ratified**: 2025-12-27 | **Last Amended**: 2025-12-27

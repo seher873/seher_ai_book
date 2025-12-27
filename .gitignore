@@ -233,6 +233,3 @@ test.db
 .docusaurus/
 build/
 .cache-loader/
-
-# Specify memory
-.specify/memory/constitution.md
