@@ -258,7 +258,21 @@ async def ingest_documents(documents: list[Document]):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "RAG Chatbot Backend"}
+    """Health check endpoint with service dependency status"""
+    services_status = {
+        "database": "up" if cohere_client is not None else "down",
+        "qdrant": "up" if qdrant is not None else "down",
+        "openrouter": "up" if openai_client is not None else "down"
+    }
+
+    all_up = all(status == "up" for status in services_status.values())
+
+    return {
+        "status": "healthy" if all_up else "unhealthy",
+        "service": "RAG Chatbot Backend",
+        "version": "1.0.0",
+        "services": services_status
+    }
 
 if __name__ == "__main__":
     import uvicorn
