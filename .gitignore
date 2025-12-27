@@ -233,3 +233,8 @@ test.db
 .docusaurus/
 build/
 .cache-loader/
+
+# GitHub Actions artifacts and logs
+*.workflow.log
+deployment-*.json
+.github/scripts/*.log
