@@ -1,0 +1,517 @@
+openapi: 3.0.1
+info:
+  title: AI Textbook Assessment API
+  description: API for managing textbook assessments, lab exercises, glossary terms, and appendices
+  version: 1.0.0
+servers:
+  - url: https://my-ai-book.example.com/api/v1
+    description: Production server
+paths:
+  /assessments:
+    get:
+      summary: Get all assessments
+      description: Retrieve a list of all textbook assessments
+      parameters:
+        - name: moduleId
+          in: query
+          description: Filter assessments by module ID
+          required: false
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Filter assessments by tag
+          required: false
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          description: Filter assessments by difficulty level
+          required: false
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assessments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AssessmentQuestion'
+    post:
+      summary: Create a new assessment
+      description: Create a new assessment question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssessmentQuestion'
+      responses:
+        '201':
+          description: Assessment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentQuestion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /assessments/{assessmentId}:
+    get:
+      summary: Get a specific assessment
+      description: Retrieve a specific assessment by ID
+      parameters:
+        - name: assessmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentQuestion'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /labs:
+    get:
+      summary: Get all lab exercises
+      description: Retrieve a list of all lab exercises
+      parameters:
+        - name: moduleId
+          in: query
+          description: Filter labs by associated module ID
+          required: false
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          description: Filter labs by difficulty level
+          required: false
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+        - name: tag
+          in: query
+          description: Filter labs by tag
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  labs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LabExercise'
+
+  /hardware-profiles:
+    get:
+      summary: Get all hardware profiles
+      description: Retrieve a list of all hardware profiles
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hardwareProfiles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HardwareProfile'
+
+  /glossary:
+    get:
+      summary: Get all glossary terms
+      description: Retrieve a list of all glossary terms
+      parameters:
+        - name: category
+          in: query
+          description: Filter terms by category
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  terms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GlossaryTerm'
+    post:
+      summary: Create a new glossary term
+      description: Create a new glossary term
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GlossaryTerm'
+      responses:
+        '201':
+          description: Term created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlossaryTerm'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /appendices:
+    get:
+      summary: Get all appendices
+      description: Retrieve a list of all appendices
+      parameters:
+        - name: category
+          in: query
+          description: Filter appendices by category
+          required: false
+          schema:
+            type: string
+        - name: skillLevel
+          in: query
+          description: Filter appendices by skill level
+          required: false
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appendices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appendix'
+
+components:
+  schemas:
+    AssessmentQuestion:
+      type: object
+      required:
+        - id
+        - moduleId
+        - questionText
+        - options
+        - correctAnswer
+        - explanation
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the question
+        moduleId:
+          type: string
+          description: Reference to the module/chapter this question relates to
+        questionText:
+          type: string
+          description: The actual question text
+        questionType:
+          type: string
+          description: Type of question, defaults to "multiple-choice"
+          default: "multiple-choice"
+        options:
+          type: array
+          items:
+            type: string
+          description: Array of possible answer options
+        correctAnswer:
+          type: integer
+          description: Index of the correct answer option
+        explanation:
+          type: string
+          description: Detailed explanation of the correct answer
+        incorrectExplanations:
+          type: array
+          items:
+            type: string
+          description: Array of explanations for incorrect options
+        difficultyLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          description: Level of difficulty
+        tags:
+          type: array
+          items:
+            type: string
+          description: Array of tags for categorizing the question
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of creation
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp of last update
+    
+    LabExercise:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - objectives
+        - steps
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the lab exercise
+        title:
+          type: string
+          description: Title of the exercise
+        description:
+          type: string
+          description: Brief description of what the exercise covers
+        prerequisites:
+          type: array
+          items:
+            type: string
+          description: Array of module IDs or skills required
+        estimatedDuration:
+          type: integer
+          description: Time estimate in minutes
+        notebookUrl:
+          type: string
+          format: uri
+          description: URL to the cloud-based notebook environment
+        objectives:
+          type: array
+          items:
+            type: string
+          description: Array of learning objectives
+        steps:
+          type: array
+          items:
+            type: string
+          description: Ordered array of instructions for the exercise
+        datasets:
+          type: array
+          items:
+            type: string
+          description: Array of dataset names or URLs used in the exercise
+        hardwareRequirements:
+          type: string
+          description: Reference to hardware profile
+        difficultyLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          description: Level of difficulty
+        tags:
+          type: array
+          items:
+            type: string
+          description: Array of tags for categorizing the exercise
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of creation
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp of last update
+
+    HardwareProfile:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the hardware profile
+        name:
+          type: string
+          description: Descriptive name of the profile
+        cpuRequirements:
+          type: string
+          description: Description of CPU requirements
+        gpuRequirements:
+          type: string
+          description: Description of GPU requirements (optional)
+        memoryRequirements:
+          type: string
+          description: Amount of RAM required
+        storageRequirements:
+          type: string
+          description: Amount of disk space required
+        networkRequirements:
+          type: string
+          description: Network requirements if any
+        performanceBenchmarks:
+          type: object
+          description: Reference hardware with benchmark times
+          properties:
+            hardware:
+              type: string
+              description: Description of reference hardware
+            benchmarks:
+              type: array
+              items:
+                type: object
+                properties:
+                  task:
+                    type: string
+                    description: Description of the task
+                  duration:
+                    type: integer
+                    description: Duration in seconds for the task
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of creation
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp of last update
+
+    GlossaryTerm:
+      type: object
+      required:
+        - id
+        - term
+        - definition
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the term
+        term:
+          type: string
+          description: The actual term being defined
+        definition:
+          type: string
+          description: The definition of the term
+        category:
+          type: string
+          description: Topic category
+        relatedTerms:
+          type: array
+          items:
+            type: string
+          description: Array of related term IDs
+        examples:
+          type: array
+          items:
+            type: string
+          description: Array of examples that illustrate the term
+        synonyms:
+          type: array
+          items:
+            type: string
+          description: Array of alternative terms with similar meanings
+        seeAlso:
+          type: array
+          items:
+            type: string
+          description: Array of references to related concepts in the textbook
+        lastReviewed:
+          type: string
+          format: date
+          description: Date of last review and validation
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of creation
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp of last update
+
+    Appendix:
+      type: object
+      required:
+        - id
+        - title
+        - content
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the appendix
+        title:
+          type: string
+          description: Title of the appendix
+        content:
+          type: string
+          description: Main content of the appendix (Markdown format)
+        category:
+          type: string
+          description: Topic category
+        skillLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          description: Target skill level
+        relatedModules:
+          type: array
+          items:
+            type: string
+          description: Array of module IDs this appendix connects to
+        tags:
+          type: array
+          items:
+            type: string
+          description: Array of tags for easy search
+        references:
+          type: array
+          items:
+            type: string
+          description: Array of references cited in the appendix
+        lastUpdated:
+          type: string
+          format: date
+          description: Date of last significant update
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of creation
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp of last update
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message
+              details:
+                type: string
+                description: Additional error details
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message
