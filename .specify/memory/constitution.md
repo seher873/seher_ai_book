@@ -1,7 +1,7 @@
 <!-- SYNC IMPACT REPORT
-Version change: 1.0.0 -> 1.0.1
-Modified principles: Filled all placeholders with project-specific content
-Added sections: All sections populated with Physical AI Textbook project details
+Version change: 1.0.1 -> 1.1.0
+Modified principles: None (existing principles preserved)
+Added sections: RAG Chatbot Specific Standards (comprehensive)
 Removed sections: None
 Templates requiring updates:
 - .specify/templates/plan-template.md ✅ aligned
@@ -9,6 +9,7 @@ Templates requiring updates:
 - .specify/templates/tasks-template.md ✅ aligned
 Runtime docs: README.md ✅ already documented
 Follow-up TODOs: None
+Merge source: constitution-rag.md and constitution-rag-chatbot.md
 -->
 
 # Physical AI & Humanoid Robotics Textbook Constitution
@@ -125,6 +126,74 @@ All contributions MUST undergo technical review by domain experts and editorial 
 - Database queries MUST use indexes for frequently accessed data
 - Vector search MUST be optimized for sub-second retrieval on collections under 100k documents
 
+## RAG Chatbot Specific Standards
+
+### Purpose and Scope
+
+The RAG (Retrieval-Augmented Generation) Chatbot provides an intelligent conversational interface that enables users to interact with the Physical AI & Humanoid Robotics Textbook content through natural language queries. The system retrieves relevant information from the textbook corpus and generates contextually appropriate responses that maintain educational accuracy and enhance the learning experience.
+
+### RAG System Rules
+
+1. **Source Fidelity**: The system MUST only provide information directly sourced from the textbook content or related course materials
+2. **Citation Clarity**: Responses MUST clearly indicate when information is being retrieved from specific chapters or sections
+3. **Uncertainty Acknowledgment**: The chatbot MUST acknowledge when queries cannot be answered with available content
+4. **Educational Tone**: All generated responses MUST maintain the educational tone and accuracy of the textbook
+5. **Clarification Over Guessing**: The system MUST handle ambiguous queries by asking for clarification rather than guessing
+6. **Privacy Protection**: User data and conversations MUST be handled according to privacy requirements
+7. **Graceful Degradation**: The system MUST gracefully handle technical errors and unavailable content
+8. **Hallucination Prevention**: Generated content MUST be free of hallucinations not supported by the textbook
+
+### RAG Architecture Components
+
+- **Chat Interface**: React-based chat interface integrated with Docusaurus
+- **Query Processing**: FastAPI backend handling query processing and response generation
+- **Retrieval Engine**: Qdrant vector database for semantic search across textbook content
+- **LLM Interface**: OpenRouter API integration with Gemini 1.5 Flash for response generation
+- **Content Pipeline**: Text processing pipeline to convert textbook content to searchable format
+- **Embedding Model**: Cohere API for generating query and document embeddings
+
+### RAG Data Pipeline
+
+1. **Content Extraction**: Textbook content extraction from Markdown files in `frontend/docs/`
+2. **Chunking**: Content chunking into semantically meaningful segments (target: 500-1000 tokens)
+3. **Embedding Generation**: Vector embeddings using Cohere models for semantic search
+4. **Indexing**: Indexing into Qdrant with metadata (chapter, section, topic tags)
+5. **Updates**: Regular updates to reflect content changes in textbook
+6. **Quality Assurance**: QA checks to ensure accuracy of indexed content and retrieval relevance
+
+### RAG Quality Metrics
+
+- **Retrieval Precision**: >85% of retrieved chunks MUST be relevant to user query
+- **Response Accuracy**: >90% of generated responses MUST be factually correct when verified against textbook
+- **Response Time**: <3 seconds for query processing and response generation (p95)
+- **Context Coherence**: Multi-turn conversations MUST maintain context across >5 exchanges
+- **Citation Accuracy**: 100% of citations MUST correctly reference textbook sections
+
+### RAG Security & Privacy
+
+- **No Personal Data Retention**: User queries and conversations MUST NOT be logged or stored beyond session
+- **API Rate Limiting**: Rate limiting to prevent abuse (100 requests/hour per user)
+- **Input Sanitization**: All user inputs MUST be sanitized to prevent injection attacks
+- **Secure Credentials**: API keys for Cohere, OpenRouter, Qdrant stored in environment variables
+- **Encryption**: All data in transit MUST use HTTPS/TLS encryption
+
+### RAG Deployment Standards
+
+- **Containerization**: Backend API containerized with Docker for consistent deployment
+- **Scalability**: System MUST handle 100 concurrent users without degradation
+- **Monitoring**: Real-time monitoring of query latency, error rates, and response quality
+- **Logging**: Structured logging for debugging (query patterns, retrieval results, error traces)
+- **Backup**: Vector database backups performed daily to prevent data loss
+
+### RAG Non-Goals
+
+1. The system will NOT generate content that is not based on the textbook materials
+2. The chatbot will NOT provide real-time updates outside of the textbook content
+3. General AI knowledge not related to the textbook content is NOT within scope
+4. The system will NOT replace the need to read the full textbook content
+5. Advanced conversational AI features like personality or humor are NOT priorities
+6. The system will NOT provide code debugging assistance beyond textbook examples
+
 ## Governance
 
 This constitution governs all content creation, review, maintenance, code development, and RAG system activities for the Physical AI & Humanoid Robotics Textbook project. All contributors MUST affirm understanding of these principles before participating. Changes to this constitution require consensus among core maintainers and MUST consider impact on all existing content, system capabilities, and development workflows. Regular compliance reviews ensure adherence to stated principles.
@@ -145,4 +214,4 @@ This constitution governs all content creation, review, maintenance, code develo
 - Violations MUST be documented and remediated within one sprint
 - Complexity additions MUST be justified against simplicity principles
 
-**Version**: 1.0.1 | **Ratified**: 2025-12-27 | **Last Amended**: 2025-12-27
+**Version**: 1.1.0 | **Ratified**: 2025-12-27 | **Last Amended**: 2025-12-27
