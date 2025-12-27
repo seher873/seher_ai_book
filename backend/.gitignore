@@ -45,6 +45,11 @@ logs/
 # Process files
 *.pid
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
 # Coverage
 .coverage
 htmlcov/

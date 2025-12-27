@@ -194,3 +194,45 @@ Logs/
 # Database files
 *.db
 *.db-journal
+*.sqlite
+*.sqlite3
+
+# Python virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Python cache
+*.pyc
+*.pyo
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Backend specific
+backend/venv/
+backend/.venv/
+backend/__pycache__/
+
+# Test files
+test.db
+*.test.db
+
+# Old/backup files
+*.bak
+*.old
+*.tmp
+*~
+
+# Shell scripts logs
+*.sh.log
+
+# Docusaurus generated
+.docusaurus/
+build/
+.cache-loader/
+
+# Specify memory
+.specify/memory/constitution.md

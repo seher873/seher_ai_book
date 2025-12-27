@@ -4,7 +4,8 @@ RAG Chatbot Backend for Physical AI & Humanoid Robotics Textbook
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional, Dict, Any
+from contextlib import asynccontextmanager
 import os
 import cohere
 import qdrant_client
@@ -12,9 +13,9 @@ from qdrant_client.http import models
 import openai
 from dotenv import load_dotenv
 import logging
-from backend.auth.main import init_auth_routes
+from auth.main import init_auth_routes
 
-# Load environment variablesrun 
+# Load environment variables
 
 load_dotenv()
 
@@ -22,14 +23,15 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 # Initialize services (will be configured later in startup event)
 cohere_client = None
 openai_client = None
-qdrant_client = None
+qdrant = None
 
 def initialize_services():
     """Initialize external services with environment variables"""
-    global cohere_client, openai_client, qdrant_client
+    global cohere_client, openai_client, qdrant
 
     if not os.getenv("COHERE_API_KEY"):
         raise RuntimeError("COHERE_API_KEY missing")
@@ -43,13 +45,13 @@ def initialize_services():
         api_key=os.getenv("OPENROUTER_API_KEY"),
         base_url="https://openrouter.ai/api/v1",
     )
-    qdrant_client = qdrant_client.QdrantClient(
+    qdrant = qdrant_client.QdrantClient(
         url=os.getenv("QDRANT_URL"),
         api_key=os.getenv("QDRANT_API_KEY")
     )
 
 # RAG Architecture Diagram:
-# 
+#
 # User Query
 #     ↓
 # [Embedding Generation with Cohere]
@@ -62,11 +64,24 @@ def initialize_services():
 #     ↓
 # RAG Response
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize services on startup and cleanup on shutdown"""
+    try:
+        initialize_services()
+        logger.info("✓ All services initialized successfully")
+    except Exception as e:
+        logger.error(f"✗ Failed to initialize services: {e}")
+        raise
+    yield
+    # Cleanup can be added here if needed
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Physical AI Textbook RAG Chatbot",
     description="RAG system for the Physical AI & Humanoid Robotics textbook",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Add CORS middleware
@@ -93,7 +108,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     query: str
     response: str
-    sources: List[dict]
+    sources: list[Dict[str, Any]]
 
 class Document(BaseModel):
     id: str
@@ -101,22 +116,15 @@ class Document(BaseModel):
     title: Optional[str] = None
     path: Optional[str] = None
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize services when the app starts"""
-    try:
-        initialize_services()
-        logger.info("✓ All services initialized successfully")
-    except Exception as e:
-        logger.error(f"✗ Failed to initialize services: {e}")
-        raise
-
 @app.get("/")
 def read_root():
     return {"message": "Physical AI Textbook RAG Chatbot Backend"}
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
+    if cohere_client is None or qdrant is None or openai_client is None:
+        raise HTTPException(status_code=500, detail="Services not initialized")
+
     try:
         # Generate embedding for the query
         query_response = cohere_client.embed(
@@ -127,7 +135,7 @@ async def chat(request: ChatRequest):
         query_embedding = query_response.embeddings[0]
         
         # Search for relevant documents in Qdrant
-        search_results = qdrant_client.search(
+        search_results = qdrant.search(
             collection_name=COLLECTION_NAME,
             query_vector=query_embedding,
             limit=request.max_results,
@@ -206,11 +214,14 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/ingest")
-async def ingest_documents(documents: List[Document]):
+async def ingest_documents(documents: list[Document]):
+    if cohere_client is None or qdrant is None:
+        raise HTTPException(status_code=500, detail="Services not initialized")
+
     try:
         # Prepare documents for embedding
         texts_to_embed = [doc.content for doc in documents]
-        
+
         # Generate embeddings using Cohere
         embeddings_response = cohere_client.embed(
             texts=texts_to_embed,
@@ -234,7 +245,7 @@ async def ingest_documents(documents: List[Document]):
             ))
         
         # Upsert points to Qdrant
-        qdrant_client.upsert(
+        qdrant.upsert(
             collection_name=COLLECTION_NAME,
             points=points
         )
