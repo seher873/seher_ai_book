@@ -7,7 +7,7 @@ from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 from typing import Optional
 from .database import get_db
-from .schemas import SignupRequest, SigninRequest, AuthResponse
+from .schemas import SignupRequest, SigninRequest, AuthResponse, UserPublic
 from .services import create_user, authenticate_user
 from .utils import create_access_token
 from .config import settings
@@ -51,16 +51,8 @@ def init_auth_routes(app: FastAPI):
             # Create access token
             access_token = create_access_token(data={"sub": db_user.email})
 
-            # Prepare response
-            user_response = {
-                "id": db_user.id,
-                "email": db_user.email,
-                "name": db_user.name,
-                "is_verified": db_user.is_verified,
-                "software_background": db_user.software_background,
-                "hardware_background": db_user.hardware_background,
-                "created_at": db_user.created_at
-            }
+            # Prepare response using UserPublic schema
+            user_response = UserPublic.model_validate(db_user)
 
             return AuthResponse(
                 access_token=access_token,
@@ -107,16 +99,8 @@ def init_auth_routes(app: FastAPI):
             # Create access token
             access_token = create_access_token(data={"sub": user.email})
 
-            # Prepare response
-            user_response = {
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "is_verified": user.is_verified,
-                "software_background": user.software_background,
-                "hardware_background": user.hardware_background,
-                "created_at": user.created_at
-            }
+            # Prepare response using UserPublic schema
+            user_response = UserPublic.model_validate(user)
 
             return AuthResponse(
                 access_token=access_token,
