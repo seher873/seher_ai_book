@@ -11,7 +11,7 @@ const Signup = () => {
   const [softwareLanguages, setSoftwareLanguages] = useState('');
   const [hardwareExperience, setHardwareExperience] = useState('');
   const [hardwareTools, setHardwareTools] = useState('');
-  const { signUp } = useAuth();
+  const { signup } = useAuth(); // Updated to use signup from custom auth
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -29,23 +29,31 @@ const Signup = () => {
       const softwareLangArray = softwareLanguages.split(',').map(lang => lang.trim()).filter(lang => lang);
       const hardwareToolsArray = hardwareTools.split(',').map(tool => tool.trim()).filter(tool => tool);
 
-      await signUp.email({
+      // Call the custom signup function
+      await signup({
         email,
         password,
         name,
-        profile: {
-          software_background: {
-            level: softwareLevel,
-            languages: softwareLangArray
-          },
-          hardware_background: {
-            experience: hardwareExperience,
-            tools: hardwareToolsArray
-          }
+        software_background: {
+          level: softwareLevel,
+          languages: softwareLangArray
+        },
+        hardware_background: {
+          experience: hardwareExperience,
+          tools: hardwareToolsArray
         }
       });
 
       alert('Signup successful!');
+      // Optionally redirect or clear form
+      setEmail('');
+      setPassword('');
+      setName('');
+      setConfirmPassword('');
+      setSoftwareLevel('');
+      setSoftwareLanguages('');
+      setHardwareExperience('');
+      setHardwareTools('');
     } catch (err) {
       console.error('Signup error:', err);
       alert(err.message || 'An error occurred during signup');

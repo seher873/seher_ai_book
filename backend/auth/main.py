@@ -13,6 +13,7 @@ from .utils import create_access_token
 from .config import settings
 
 
+
 # Security for protected routes
 security = HTTPBearer()
 

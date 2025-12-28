@@ -5,7 +5,7 @@ import { useAuth } from '../../auth-client';
 const Signin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn } = useAuth();
+  const { signin } = useAuth(); // Updated to use signin from custom auth
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -13,17 +13,14 @@ const Signin = () => {
 
     try {
       setLoading(true);
-      const result = await signIn.email({
+      await signin({
         email,
         password,
-        redirectTo: '/dashboard', // Redirect after login
       });
 
-      if (result?.error) {
-        alert(result.error.message || 'Signin failed. Please try again.');
-      } else {
-        alert('Signin successful!');
-      }
+      alert('Signin successful!');
+      // In a real app, you might want to redirect the user
+      // history.push('/dashboard') or similar
     } catch (err) {
       console.error('Signin error:', err);
       alert(err.message || 'An error occurred during signin');

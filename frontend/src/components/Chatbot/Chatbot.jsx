@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useBaseUrl } from '@docusaurus/useBaseUrl';
+import { useAuth } from '../../auth-client';
 
 import './Chatbot.css';
 
@@ -9,6 +10,7 @@ import './Chatbot.css';
  * Implements a chat interface for interacting with the Physical AI textbook RAG system
  */
 const Chatbot = ({ isOpen, onClose, onToggle }) => {
+  const { isAuthenticated, getAuthToken } = useAuth();
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -32,8 +34,14 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!inputValue.trim() || isLoading) return;
+
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      alert('Please sign in to use the chatbot');
+      return;
+    }
 
     // Add user message to chat
     const userMessage = {
@@ -48,11 +56,15 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
     setIsLoading(true);
 
     try {
+      // Get auth token
+      const token = getAuthToken();
+
       // Call backend API to get response
       const response = await fetch(`${process.env.REACT_APP_CHATBOT_API_URL || 'http://localhost:8000'}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`  // Add auth token to request
         },
         body: JSON.stringify({
           query: inputValue,
@@ -61,6 +73,10 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          alert('Authentication required. Please sign in again.');
+          return;
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -95,6 +111,38 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
 
   if (!isOpen) return null;
 
+  // Show authentication prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="chatbot-container">
+        <div className="chatbot-header">
+          <h3>Physical AI Assistant</h3>
+          <button className="chatbot-close-btn" onClick={onClose} aria-label="Close chat">
+            ×
+          </button>
+        </div>
+
+        <div className="chatbot-auth-prompt">
+          <p>Please sign in to access the chatbot and ask questions about the textbook content.</p>
+          <div className="auth-buttons">
+            <button
+              className="auth-btn signin-btn"
+              onClick={() => document.getElementById('signin-modal')?.click()}
+            >
+              Sign In
+            </button>
+            <button
+              className="auth-btn signup-btn"
+              onClick={() => document.getElementById('signup-modal')?.click()}
+            >
+              Sign Up
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="chatbot-container">
       <div className="chatbot-header">
@@ -103,23 +151,23 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
           ×
         </button>
       </div>
-      
+
       <div className="chatbot-messages">
         {messages.map((message) => (
-          <div 
-            key={message.id} 
+          <div
+            key={message.id}
             className={`chatbot-message ${message.sender}-message`}
           >
             <div className="message-content">
               <p>{message.text}</p>
-              
+
               {message.sources && message.sources.length > 0 && (
                 <div className="message-sources">
                   <small>Sources:</small>
                   <ul>
                     {message.sources.slice(0, 3).map((source, idx) => (
                       <li key={idx}>
-                        {source.title || source.path || 'Source'} 
+                        {source.title || source.path || 'Source'}
                         {source.score && ` (Relevance: ${(source.score * 100).toFixed(1)}%)`}
                       </li>
                     ))}
@@ -132,7 +180,7 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
             </div>
           </div>
         ))}
-        
+
         {isLoading && (
           <div className="chatbot-message bot-message">
             <div className="message-content">
@@ -146,7 +194,7 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
         )}
         <div ref={messagesEndRef} />
       </div>
-      
+
       <form onSubmit={handleSubmit} className="chatbot-input-form">
         <input
           type="text"
@@ -156,8 +204,8 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
           disabled={isLoading}
           className="chatbot-input"
         />
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={!inputValue.trim() || isLoading}
           className="chatbot-send-btn"
         >

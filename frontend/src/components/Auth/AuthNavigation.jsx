@@ -3,22 +3,22 @@ import { useAuth } from '../../auth-client';
 import Link from '@docusaurus/Link';
 
 const AuthNavigation = () => {
-  const { session, isPending, signOut } = useAuth();
+  const { user, loading, signout, isAuthenticated } = useAuth();
 
-  if (isPending) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="auth-nav">
-      {session ? (
+      {isAuthenticated ? (
         <div className="user-menu">
-          <span>Welcome, {session.user.name}!</span>
+          <span>Welcome, {user?.name || user?.email}!</span>
           <button
             onClick={() => {
-              signOut();
-              // Redirect to home after logout
-              window.location.href = '/';
+              signout();
+              // Refresh the page to update UI after logout
+              window.location.reload();
             }}
             className="logout-btn"
             style={{
