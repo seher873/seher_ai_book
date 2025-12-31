@@ -1,0 +1,17 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended"
+  ],
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "react/prop-types": "error",
+    "react/react-in-jsx-scope": "error",
+    "react/jsx-no-comment-textnodes": "warn"
+  }
+}

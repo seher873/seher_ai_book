@@ -60,7 +60,7 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
       const token = getAuthToken();
 
       // Call backend API to get response
-      const response = await fetch(`${process.env.REACT_APP_CHATBOT_API_URL || 'http://localhost:8000'}/chat`, {
+      const response = await fetch(`${process.env.REACT_APP_CHATBOT_API_URL || 'http://localhost:8000'}/api/chat`, {  // Changed from /chat to /api/chat
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -12,7 +12,7 @@ class CustomAuthClient {
 
   // Signup function
   async signup(userData) {
-    const response = await fetch(`${this.baseURL}/auth/signup`, {
+    const response = await fetch(`${this.baseURL}/api/register`, {  // Changed from /auth/signup to /api/register
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,18 +26,18 @@ class CustomAuthClient {
     }
 
     const data = await response.json();
-    
+
     // Store token in localStorage
     if (data.access_token) {
       localStorage.setItem('access_token', data.access_token);
     }
-    
+
     return data;
   }
 
   // Signin function
   async signin(credentials) {
-    const response = await fetch(`${this.baseURL}/auth/signin`, {
+    const response = await fetch(`${this.baseURL}/api/login`, {  // Changed from /auth/signin to /api/login
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -51,12 +51,12 @@ class CustomAuthClient {
     }
 
     const data = await response.json();
-    
+
     // Store token in localStorage
     if (data.access_token) {
       localStorage.setItem('access_token', data.access_token);
     }
-    
+
     return data;
   }
 

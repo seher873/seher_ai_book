@@ -42,7 +42,7 @@
   force = false
 
 [[redirects]]
-  # API proxy to backend (optional, if using backend API)
+  # API proxy to backend
   from = "/api/*"
   to = "https://seher873-my-ai-book.hf.space/:splat"
   status = 200
