@@ -24,31 +24,33 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
-# Copy Python packages from builder
-COPY --from=builder /root/.local /root/.local
+# Create non-root user for security first
+RUN useradd -m -u 1000 appuser
+
+# Copy Python packages from builder to appuser's home
+COPY --from=builder /root/.local /home/appuser/.local
 
 # Copy application code
 COPY . .
 
-# Create non-root user for security
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
+# Change ownership of all files to appuser
+RUN chown -R appuser:appuser /app /home/appuser/.local
 
 # Set environment variables
 ENV PYTHONPATH=/app \
-    PORT=8000 \
-    PATH=/root/.local/bin:$PATH \
+    PORT=7860 \
+    PATH=/home/appuser/.local/bin:$PATH \
     PYTHONUNBUFFERED=1
 
 # Expose port
-EXPOSE 8000
+EXPOSE 7860
 
 # Switch to non-root user
 USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:7860/health').read()" || exit 1
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
