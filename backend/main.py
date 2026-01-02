@@ -1,19 +1,22 @@
 """
 RAG Chatbot Backend for Physical AI & Humanoid Robotics Textbook
 """
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Request # type: ignore
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from pydantic import BaseModel # pyright: ignore[reportMissingImports]
 from typing import Optional, Dict, Any
 from contextlib import asynccontextmanager
 import os
-import cohere
-import qdrant_client
-from qdrant_client.http import models
-import openai
-from dotenv import load_dotenv
+import cohere # type: ignore
+import qdrant_client # type: ignore
+from qdrant_client.http import models # pyright: ignore[reportMissingImports]
+import openai # type: ignore
+from dotenv import load_dotenv # type: ignore
 import logging
 from auth.main import init_auth_routes
+from slowapi import Limiter, _rate_limit_exceeded_handler # type: ignore
+from slowapi.util import get_remote_address # type: ignore
+from slowapi.errors import RateLimitExceeded # type: ignore
 
 # Load environment variables
 
@@ -23,6 +26,8 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 # Initialize services (will be configured later in startup event)
 cohere_client = None
@@ -84,6 +89,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Add rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -99,7 +108,7 @@ init_auth_routes(app)
 # Constants
 COLLECTION_NAME = "seher_robotic_book_netlify_app"
 EMBEDDING_MODEL = "embed-english-v3.0"
-GENERATION_MODEL = os.getenv("OPENROUTER_MODEL", "xiaomi/mimo-v2-flash")
+GENERATION_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-flash-1.5")
 
 class ChatRequest(BaseModel):
     query: str
@@ -121,24 +130,25 @@ def read_root():
     return {"message": "Physical AI Textbook RAG Chatbot Backend"}
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+@limiter.limit("10/minute")
+async def chat(request: Request, chat_request: ChatRequest):
     if cohere_client is None or qdrant is None or openai_client is None:
         raise HTTPException(status_code=500, detail="Services not initialized")
 
     try:
         # Generate embedding for the query
         query_response = cohere_client.embed(
-            texts=[request.query],
+            texts=[chat_request.query],
             model=EMBEDDING_MODEL,
             input_type="search_query"
         )
         query_embedding = query_response.embeddings[0]
-        
+
         # Search for relevant documents in Qdrant
         search_results = qdrant.search(
             collection_name=COLLECTION_NAME,
             query_vector=query_embedding,
-            limit=request.max_results,
+            limit=chat_request.max_results,
             with_payload=True
         )
         
@@ -160,24 +170,29 @@ async def chat(request: ChatRequest):
         # If no relevant content found, return appropriate response
         if not relevant_contents:
             return ChatResponse(
-                query=request.query,
+                query=chat_request.query,
                 response="Not found in the book",
                 sources=[]
             )
-        
+
         # Combine context for generation
         context = "\n\n".join(relevant_contents)
-        
+
         # Create prompt for response generation
         prompt = f"""
-        Based on the provided context from the Physical AI & Humanoid Robotics textbook, 
-        please answer the user's question. If the information is not available in the 
-        context, respond with "Not found in the book".
-        
-        Context: {context}
-        
-        Question: {request.query}
-        
+        You are an expert AI professor specialized in the "Physical AI & Humanoid Robotics" textbook.
+        Use the following retrieved context to answer the student's question accurately.
+
+        Context:
+        {context}
+
+        Question: {chat_request.query}
+
+        Guidelines:
+        - Answer directly based on the context provided.
+        - If the exact answer isn't in the context but relates to Physical AI topics discussed, provide a helpful general answer based on your knowledge as a textbook assistant.
+        - Only say "I'm sorry, I couldn't find specific details on this in the textbook" if the question is completely unrelated to Robotics or Physical AI.
+
         Answer:
         """
         
@@ -198,13 +213,13 @@ async def chat(request: ChatRequest):
         # Check if response indicates information is not in the book
         if "Not found in the book" in response_text or response_text.strip() == "":
             return ChatResponse(
-                query=request.query,
+                query=chat_request.query,
                 response="Not found in the book",
                 sources=[]
             )
 
         return ChatResponse(
-            query=request.query,
+            query=chat_request.query,
             response=response_text,
             sources=sources
         )
@@ -214,7 +229,8 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/ingest")
-async def ingest_documents(documents: list[Document]):
+@limiter.limit("5/minute")
+async def ingest_documents(request: Request, documents: list[Document]):
     if cohere_client is None or qdrant is None:
         raise HTTPException(status_code=500, detail="Services not initialized")
 
@@ -275,5 +291,5 @@ async def health_check():
     }
 
 if __name__ == "__main__":
-    import uvicorn
+    import uvicorn # pyright: ignore[reportMissingImports]
     uvicorn.run(app, host="0.0.0.0", port=8000)
