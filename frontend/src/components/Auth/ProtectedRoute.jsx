@@ -1,18 +1,16 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../auth-client';
+import { useAuth } from './AuthProvider'; // Using consistent auth system
 
 const ProtectedRoute = ({ children }) => {
-  const { session, isPending } = useAuth();
-  const location = useLocation();
+  const { user, loading } = useAuth(); // Using the custom auth context
 
-  if (isPending) {
+  if (loading) {
     return (
       <div style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        height: '100vh',
+        minHeight: '70vh',
         fontSize: '18px'
       }}>
         Loading...
@@ -20,9 +18,13 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!session) {
-    // Redirect to login page with return url
-    return <Navigate to={`/auth/login?return=${location.pathname}`} replace />;
+  if (!user) {
+    // In Docusaurus, we use window.location for navigation instead of React Router
+    if (typeof window !== 'undefined') {
+      const returnUrl = window.location.pathname;
+      window.location.href = `/auth/login?return=${encodeURIComponent(returnUrl)}`;
+    }
+    return <div>Redirecting...</div>;
   }
 
   return children;

@@ -48,8 +48,8 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
     setIsLoading(true);
 
     try {
-      // Call backend API to get response
-      const response = await fetch(`${process.env.REACT_APP_CHATBOT_API_URL || 'http://localhost:8000'}/chat`, {
+      // Call backend API to get response via proxy
+      const response = await fetch(`/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +77,8 @@ const Chatbot = ({ isOpen, onClose, onToggle }) => {
 
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
-      console.error('Error getting chat response:', error);
+      const errorMsg = error?.message || String(error) || 'Unknown error';
+      console.error('Error getting chat response:', errorMsg);
 
       // Add error message to chat
       const errorMessage = {

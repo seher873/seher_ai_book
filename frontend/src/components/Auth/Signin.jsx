@@ -1,11 +1,11 @@
 // src/components/Auth/Signin.jsx
 import React, { useState } from 'react';
-import { useAuth } from '../../auth-client';
+import { useAuth } from './AuthProvider'; // Using consistent auth system
 
 const Signin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn } = useAuth();
+  const { signin, error } = useAuth(); // Using the custom auth context
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -13,20 +13,14 @@ const Signin = () => {
 
     try {
       setLoading(true);
-      const result = await signIn.email({
-        email,
-        password,
-        redirectTo: '/dashboard', // Redirect after login
-      });
-
-      if (result?.error) {
-        alert(result.error.message || 'Signin failed. Please try again.');
-      } else {
-        alert('Signin successful!');
-      }
+      await signin(email, password); // Using the custom signin function
+      alert('Signin successful!');
+      // Optionally redirect to dashboard
+      window.location.href = '/dashboard';
     } catch (err) {
-      console.error('Signin error:', err);
-      alert(err.message || 'An error occurred during signin');
+      const errorMsg = err?.message || String(err) || 'An error occurred during signin';
+      console.error('Signin error:', errorMsg);
+      alert(errorMsg);
     } finally {
       setLoading(false);
     }

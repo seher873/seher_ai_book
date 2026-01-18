@@ -2,9 +2,9 @@
 Authentication module using better-auth for FastAPI
 Implements signup and signin functionality with TDD approach
 """
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import HTTPBearer
-from sqlalchemy.orm import Session
+from fastapi import FastAPI, Depends, HTTPException, status # type: ignore
+from fastapi.security import HTTPBearer # type: ignore
+from sqlalchemy.orm import Session # type: ignore
 from typing import Optional
 from .database import get_db
 from .schemas import SignupRequest, SigninRequest, AuthResponse, UserPublic

@@ -1,6 +1,6 @@
 // src/components/Auth/Signup.jsx
 import React, { useState } from 'react';
-import { useAuth } from '../../auth-client';
+import { useAuth } from './AuthProvider'; // Using consistent auth system
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -11,7 +11,7 @@ const Signup = () => {
   const [softwareLanguages, setSoftwareLanguages] = useState('');
   const [hardwareExperience, setHardwareExperience] = useState('');
   const [hardwareTools, setHardwareTools] = useState('');
-  const { signUp } = useAuth();
+  const { signup, error } = useAuth(); // Using the custom auth context
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -25,30 +25,18 @@ const Signup = () => {
     try {
       setLoading(true);
 
-      // Parse the languages and tools as arrays
-      const softwareLangArray = softwareLanguages.split(',').map(lang => lang.trim()).filter(lang => lang);
-      const hardwareToolsArray = hardwareTools.split(',').map(tool => tool.trim()).filter(tool => tool);
-
-      await signUp.email({
-        email,
-        password,
-        name,
-        profile: {
-          software_background: {
-            level: softwareLevel,
-            languages: softwareLangArray
-          },
-          hardware_background: {
-            experience: hardwareExperience,
-            tools: hardwareToolsArray
-          }
-        }
-      });
+      // Using the custom signup function with correct parameters
+      await signup(email, password, name, softwareLanguages, hardwareTools);
 
       alert('Signup successful!');
+      // Optionally redirect to dashboard
+      if (typeof window !== 'undefined') {
+        window.location.href = '/dashboard';
+      }
     } catch (err) {
-      console.error('Signup error:', err);
-      alert(err.message || 'An error occurred during signup');
+      const errorMsg = err?.message || String(err) || 'An error occurred during signup';
+      console.error('Signup error:', errorMsg);
+      alert(errorMsg);
     } finally {
       setLoading(false);
     }

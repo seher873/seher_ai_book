@@ -1,25 +1,21 @@
 const express = require('express');
 const path = require('path');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const authRoutes = require('./server/auth.js'); // Import authentication routes
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Serve static files from the 'build' directory
 app.use(express.static(path.join(__dirname, 'build')));
 
-// Mount authentication routes
-app.use(authRoutes);
-
 // Proxy API requests to the backend chat service
 app.use('/api', createProxyMiddleware({
-  target: process.env.CHATBOT_API_URL || 'http://localhost:8000',
+  target: process.env.CHATBOT_API_URL || 'https://sehrkhan873-robotic-text-book.hf.space',
   changeOrigin: true,
   pathRewrite: {
     '^/api': '', // Remove /api prefix when forwarding to backend
   },
   onProxyReq: (proxyReq, req, res) => {
-    console.log(`Proxying ${req.method} ${req.url} to ${process.env.CHATBOT_API_URL || 'http://localhost:8000'}`);
+    console.log(`Proxying ${req.method} ${req.url} to ${process.env.CHATBOT_API_URL || 'https://sehrkhan873-robotic-text-book.hf.space'}`);
   },
   onProxyRes: (proxyRes, req, res) => {
     console.log(`Received response from backend: ${proxyRes.statusCode} for ${req.url}`);
@@ -51,5 +47,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   - Logo: /img/logoo.png`);
   console.log(`   - Dashboard: /img/roobot.png`);
   console.log(`   - Homepage: /img/robot.png`);
-  console.log(`🔗 API requests to /api will be forwarded to ${process.env.CHATBOT_API_URL || 'http://localhost:8000'}`);
+  console.log(`🔗 API requests to /api will be forwarded to ${process.env.CHATBOT_API_URL || 'https://sehrkhan873-robotic-text-book.hf.space'}`);
 });

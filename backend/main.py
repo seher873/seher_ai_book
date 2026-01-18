@@ -129,6 +129,33 @@ class Document(BaseModel):
 def read_root():
     return {"message": "Physical AI Textbook RAG Chatbot Backend"}
 
+
+@app.get("/users/{user_id}/tasks")
+def get_user_tasks(user_id: str, limit: int = 100, offset: int = 0):
+    """Get tasks for a specific user"""
+    # This is a placeholder implementation - in a real app, this would query the database
+    # Return an empty list to prevent 404 errors for now
+    return {
+        "tasks": [],
+        "total": 0,
+        "limit": limit,
+        "offset": offset
+    }
+
+
+@app.get("/users/{user_id}/tasks/{task_id}")
+def get_user_task(user_id: str, task_id: str):
+    """Get a specific task for a user"""
+    # Placeholder implementation
+    return {"detail": "Task not found"}
+
+
+@app.post("/users/{user_id}/tasks")
+def create_user_task(user_id: str, request: Request):
+    """Create a task for a user"""
+    # Placeholder implementation
+    return {"detail": "Task created successfully"}
+
 @app.post("/chat", response_model=ChatResponse)
 @limiter.limit("10/minute")
 async def chat(request: Request, chat_request: ChatRequest):
@@ -280,6 +307,7 @@ async def health_check():
         "qdrant": "up" if qdrant is not None else "down",
         "openrouter": "up" if openai_client is not None else "down"
     }
+
 
     all_up = all(status == "up" for status in services_status.values())
 

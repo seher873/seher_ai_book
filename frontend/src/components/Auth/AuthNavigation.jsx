@@ -1,22 +1,22 @@
 import React from 'react';
-import { useAuth } from '../../auth-client';
+import { useAuth } from './AuthProvider'; // Using consistent auth system
 import Link from '@docusaurus/Link';
 
 const AuthNavigation = () => {
-  const { session, isPending, signOut } = useAuth();
+  const { user, loading, signout } = useAuth(); // Using the custom auth context
 
-  if (isPending) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="auth-nav">
-      {session ? (
+      {user ? (
         <div className="user-menu">
-          <span>Welcome, {session.user.name}!</span>
+          <span>Welcome, {user.name || user.email}!</span>
           <button
             onClick={() => {
-              signOut();
+              signout(); // Using the custom signout function
               // Redirect to home after logout
               window.location.href = '/';
             }}

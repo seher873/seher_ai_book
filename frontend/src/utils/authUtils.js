@@ -1,14 +1,14 @@
 // Utility functions for authentication
-import { useAuth } from '../auth-client';
+import { useAuth } from '../components/Auth/AuthProvider'; // Import from the actual AuthProvider
 
 // Custom hook to access authentication status
 export const useAuthStatus = () => {
-  const { session, isPending } = useAuth();
+  const { user, loading } = useAuth(); // Using the custom auth context
 
   return {
-    isAuthenticated: !!session,
-    user: session?.user,
-    loading: isPending,
+    isAuthenticated: !!user,
+    user: user,
+    loading: loading,
     error: null
   };
 };

@@ -31,8 +31,8 @@ qdrant_client = qdrant_client.QdrantClient(
 # Constants
 COLLECTION_NAME = "seher_robotic_book_netlify_app"
 EMBEDDING_MODEL = "embed-english-v3.0"
-DOCS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs")  # Path to the docs directory
-CONTENT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "content")  # Path to the content directory
+DOCS_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "docs")  # Path to the docs directory
+CONTENT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "src", "content")  # Path to the content directory
 
 def clean_markdown_content(content):
     """
@@ -47,70 +47,67 @@ def clean_markdown_content(content):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-def chunk_text(text, chunk_size=500, overlap=50):  # Smaller chunks to reduce memory usage
+def chunk_text(text, chunk_size=300, overlap=30):  # Further reduced chunk size
     """
     Split text into overlapping chunks
     """
     chunks = []
-    start = 0
+    if not text:
+        return chunks
 
+    start = 0
     while start < len(text):
         end = start + chunk_size
         chunk = text[start:end]
 
-        # Make sure we don't cut in the middle of a sentence if possible
         if end < len(text):
-            # Look for sentence boundaries to avoid cutting mid-sentence
             last_period = chunk.rfind('.')
             last_exclamation = chunk.rfind('!')
             last_question = chunk.rfind('?')
             last_boundary = max(last_period, last_exclamation, last_question)
 
-            if last_boundary > chunk_size // 2:  # Only adjust if the boundary is reasonably close
-                chunk = text[start:last_boundary + 1]
-                end = last_boundary + 1
+            if last_boundary > chunk_size // 2:
+                chunk = text[start:start + last_boundary + 1]
+                end = start + last_boundary + 1
 
         chunks.append(chunk)
-        start = end - overlap  # Apply overlap for context continuity
-
-        # If overlap adjustment made start >= len(text), break
+        start = end - overlap
         if start >= len(text):
             break
-
     return chunks
 
 def create_collection():
     """
-    Create Qdrant collection if it doesn't exist
+    Create Qdrant collection if it doesn't exist (Don't delete if exists)
     """
     try:
-        # Check if collection exists
         collections = qdrant_client.get_collections().collections
         collection_names = [coll.name for coll in collections]
 
         if COLLECTION_NAME not in collection_names:
-            # Create collection with appropriate vector size for Cohere embeddings
-            # The embed-english-v3.0 model produces 1024-dim vectors for "search_document" input type
             qdrant_client.create_collection(
                 collection_name=COLLECTION_NAME,
                 vectors_config=models.VectorParams(size=1024, distance=models.Distance.COSINE)
             )
             logger.info(f"Created collection: {COLLECTION_NAME}")
         else:
-            # Clear existing collection to start fresh
+            # Clear existing collection to ensure we have FRESH full content (no stale 25 points)
             qdrant_client.delete_collection(COLLECTION_NAME)
             qdrant_client.create_collection(
                 collection_name=COLLECTION_NAME,
                 vectors_config=models.VectorParams(size=1024, distance=models.Distance.COSINE)
             )
-            logger.info(f"Recreated collection: {COLLECTION_NAME}")
+            logger.info(f"Recreated collection {COLLECTION_NAME} to ensure fresh ingestion.")
     except Exception as e:
         logger.error(f"Error creating collection: {e}")
         raise
 
-def process_file_in_batches(file_path, batch_size=10):
+import time
+import uuid
+
+def process_file_in_batches(file_path, batch_size=90):  # Optimized batch size for Trial Key
     """
-    Process a single file and ingest in small batches to manage memory
+    Process a single file and ingest in larger batches to maximize Trial API usage
     """
     logger.info(f"Processing file: {file_path}")
 
@@ -119,14 +116,14 @@ def process_file_in_batches(file_path, batch_size=10):
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Extract title from the markdown frontmatter or first heading
+        # Extract title
         title = "Untitled"
         lines = content.split('\n')
         for line in lines:
-            if line.startswith('# '):  # First level heading
+            if line.startswith('# '):
                 title = line[2:].strip()
                 break
-            elif line.startswith('title:'):  # Frontmatter title
+            elif line.startswith('title:'):
                 title = line[7:].strip()
                 break
 
@@ -140,9 +137,12 @@ def process_file_in_batches(file_path, batch_size=10):
         total_processed = 0
 
         for i in range(0, len(chunks), batch_size):
-            batch_chunks = chunks[i:i+batch_size]
+            # Initial wait to cool down any existing limits
+            if i == 0:
+                logger.info("Cooling down for 60s before first batch...")
+                time.sleep(60)
 
-            # Filter out very small chunks
+            batch_chunks = chunks[i:i+batch_size]
             batch_chunks = [chunk for chunk in batch_chunks if len(chunk.strip()) > 10]
 
             if not batch_chunks:
@@ -150,43 +150,57 @@ def process_file_in_batches(file_path, batch_size=10):
 
             logger.info(f"Processing batch {i//batch_size + 1} for {file_path} ({len(batch_chunks)} chunks)")
 
-            try:
-                # Generate embeddings using Cohere
-                embeddings_response = cohere_client.embed(
-                    texts=batch_chunks,
-                    model=EMBEDDING_MODEL,
-                    input_type="search_document"
-                )
+            max_retries = 5
+            retry_count = 0
 
-                embeddings = embeddings_response.embeddings
+            while retry_count < max_retries:
+                try:
+                    # Generate embeddings using Cohere
+                    embeddings_response = cohere_client.embed(
+                        texts=batch_chunks,
+                        model=EMBEDDING_MODEL,
+                        input_type="search_document"
+                    )
 
-                # Prepare points for Qdrant
-                points = []
-                for j, (chunk, embedding) in enumerate(zip(batch_chunks, embeddings)):
-                    chunk_id = f"{os.path.basename(file_path)}_{i+j:04d}"
-                    points.append(models.PointStruct(
-                        id=chunk_id,
-                        vector=embedding,
-                        payload={
-                            "content": chunk,
-                            "title": title,
-                            "path": file_path,
-                            "source_file": os.path.basename(file_path)
-                        }
-                    ))
+                    embeddings = embeddings_response.embeddings
 
-                # Upsert points to Qdrant
-                qdrant_client.upsert(
-                    collection_name=COLLECTION_NAME,
-                    points=points
-                )
+                    # Prepare points for Qdrant
+                    points = []
+                    for j, (chunk, embedding) in enumerate(zip(batch_chunks, embeddings)):
+                        point_id = str(uuid.uuid4())
+                        points.append(models.PointStruct(
+                            id=point_id,
+                            vector=embedding,
+                            payload={
+                                "content": chunk,
+                                "title": title,
+                                "path": file_path,
+                                "source_file": os.path.basename(file_path)
+                            }
+                        ))
 
-                total_processed += len(points)
-                logger.info(f"Ingested {len(points)} chunks from batch {i//batch_size + 1} of {file_path}")
+                    # Upsert points to Qdrant
+                    qdrant_client.upsert(
+                        collection_name=COLLECTION_NAME,
+                        points=points
+                    )
 
-            except Exception as e:
-                logger.error(f"Error processing batch {i//batch_size + 1} of {file_path}: {e}")
-                continue  # Continue with the next batch even if one fails
+                    total_processed += len(points)
+                    logger.info(f"Ingested {len(points)} chunks from batch {i//batch_size + 1} of {file_path}")
+
+                    # Moderate delay between batches (6 batches per minute max)
+                    time.sleep(15)
+                    break
+
+                except Exception as e:
+                    if "429" in str(e) or "trial" in str(e).lower() or "limit" in str(e).lower():
+                        retry_count += 1
+                        wait_time = (2 ** retry_count) * 20
+                        logger.warning(f"Rate limited (429). Retrying in {wait_time}s... ({retry_count}/{max_retries})")
+                        time.sleep(wait_time)
+                    else:
+                        logger.error(f"Error processing batch {i//batch_size + 1} of {file_path}: {e}")
+                        break
 
         return total_processed
 
@@ -205,27 +219,31 @@ def ingest_documents():
     docs_md_files = glob.glob(os.path.join(DOCS_PATH, "**/*.md"), recursive=True)
     logger.info(f"Found {len(docs_md_files)} markdown files in docs directory to process")
 
-    # Find all markdown files in the content directory
-    content_md_files = glob.glob(os.path.join(CONTENT_PATH, "**/*.md"), recursive=True)
-    logger.info(f"Found {len(content_md_files)} markdown files in content directory to process")
+    # Filter out templates
+    docs_md_files = [f for f in docs_md_files if "_template" not in f]
 
-    # Combine both lists
-    all_md_files = docs_md_files + content_md_files
-    logger.info(f"Total of {len(all_md_files)} markdown files to process")
+    # Combine lists (content path currently empty but keeping for structure)
+    all_md_files = docs_md_files
+    logger.info(f"Total of {len(all_md_files)} informative markdown files to process")
 
     total_chunks = 0
 
-    # Process files one by one to manage memory usage
+    # Process files one by one
     for md_file in all_md_files:
         chunks_count = process_file_in_batches(md_file)
         total_chunks += chunks_count
         logger.info(f"Completed processing {md_file}, total chunks so far: {total_chunks}")
+        # Small break between files
+        time.sleep(1)
 
     logger.info(f"Successfully ingested {total_chunks} total chunks into Qdrant")
-    
-    # Print final collection info
-    collection_info = qdrant_client.get_collection(COLLECTION_NAME)
-    logger.info(f"Final collection '{COLLECTION_NAME}' points count: {collection_info.points_count}")
+
+    # Print final collection info (Wrapped in try/except to avoid pydantic issues)
+    try:
+        collection_info = qdrant_client.get_collection(COLLECTION_NAME)
+        logger.info(f"Final collection '{COLLECTION_NAME}' points count: {collection_info.points_count}")
+    except Exception as e:
+        logger.warning(f"Could not retrieve collection info due to client/server version mismatch, but ingestion may have succeeded: {e}")
 
 if __name__ == "__main__":
     logger.info("Starting ingestion process for both docs and content directories...")

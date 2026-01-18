@@ -21,6 +21,14 @@ const config = {
 
   onBrokenLinks: 'ignore',
   onBrokenMarkdownLinks: 'warn',
+  markdown: {
+    mermaid: true,
+    mdx1Compat: {
+      comments: true,
+      admonitions: true,
+      headingIds: true,
+    },
+  },
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -50,6 +58,23 @@ const config = {
     ],
   ],
 
+  themes: [
+    '@docusaurus/theme-mermaid',
+  ],
+  plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        fromExtensions: ['html', 'htm'],
+        redirects: [
+          {
+            to: '/',
+            from: ['/index'],
+          },
+        ],
+      },
+    ],
+  ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({

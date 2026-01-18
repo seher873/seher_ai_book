@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+import React from 'react';
+
 # Physical AI & Humanoid Robotics Textbook
 
 <div style={{textAlign: 'center', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '8px', marginBottom: '20px'}}>
