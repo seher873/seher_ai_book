@@ -13,6 +13,14 @@ from qdrant_client.http import models # pyright: ignore[reportMissingImports]
 import openai # type: ignore
 from dotenv import load_dotenv # type: ignore
 import logging
+# Import auth routes
+import sys
+import os
+# Add the current directory to Python path to ensure local modules can be imported
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
 from auth.main import init_auth_routes
 from slowapi import Limiter, _rate_limit_exceeded_handler # type: ignore
 from slowapi.util import get_remote_address # type: ignore
@@ -42,18 +50,27 @@ def initialize_services():
         raise RuntimeError("COHERE_API_KEY missing")
     if not os.getenv("OPENROUTER_API_KEY"):
         raise RuntimeError("OPENROUTER_API_KEY missing")
-    if not os.getenv("QDRANT_URL") or not os.getenv("QDRANT_API_KEY"):
-        raise RuntimeError("QDRANT_URL and QDRANT_API_KEY missing")
+    if not os.getenv("QDRANT_URL"):
+        raise RuntimeError("QDRANT_URL missing")
+    if not os.getenv("QDRANT_API_KEY"):
+        logger.warning("QDRANT_API_KEY not set - Qdrant functionality will be limited")
+        # Continue without API key (for local Qdrant or if using anonymous access)
 
     cohere_client = cohere.Client(os.getenv("COHERE_API_KEY"))
     openai_client = openai.OpenAI(
         api_key=os.getenv("OPENROUTER_API_KEY"),
         base_url="https://openrouter.ai/api/v1",
     )
-    qdrant = qdrant_client.QdrantClient(
-        url=os.getenv("QDRANT_URL"),
-        api_key=os.getenv("QDRANT_API_KEY")
-    )
+    qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    if qdrant_api_key:
+        qdrant = qdrant_client.QdrantClient(
+            url=os.getenv("QDRANT_URL"),
+            api_key=qdrant_api_key
+        )
+    else:
+        qdrant = qdrant_client.QdrantClient(
+            url=os.getenv("QDRANT_URL")
+        )
 
 # RAG Architecture Diagram:
 #
@@ -171,28 +188,49 @@ async def chat(request: Request, chat_request: ChatRequest):
         )
         query_embedding = query_response.embeddings[0]
 
-        # Search for relevant documents in Qdrant
-        search_results = qdrant.search(
-            collection_name=COLLECTION_NAME,
-            query_vector=query_embedding,
-            limit=chat_request.max_results,
-            with_payload=True
-        )
-        
+        # Search for relevant documents in Qdrant - try different methods based on client version
+        try:
+            # Try the newer search_points method first
+            search_results = qdrant.search_points(
+                collection_name=COLLECTION_NAME,
+                vector=query_embedding,
+                limit=chat_request.max_results,
+                with_payload=True
+            )
+        except AttributeError:
+            # Fall back to the traditional search method if search_points is not available
+            search_results = qdrant.search(
+                collection_name=COLLECTION_NAME,
+                query_vector=query_embedding,
+                limit=chat_request.max_results,
+                with_payload=True
+            )
+
         # Extract content from search results
         relevant_contents = []
         sources = []
-        
+
         for result in search_results:
-            content = result.payload.get("content", "")
+            # Handle different result formats depending on Qdrant client version
+            if hasattr(result, 'payload'):
+                # Newer Qdrant client format (ScoredPoint)
+                content = result.payload.get("content", "")
+                sources.append({
+                    "id": result.id,
+                    "title": result.payload.get("title", "Unknown"),
+                    "path": result.payload.get("path", "Unknown"),
+                    "score": result.score
+                })
+            else:
+                # Older format or dict format
+                content = result.get('payload', {}).get("content", "")
+                sources.append({
+                    "id": result.get('id', ''),
+                    "title": result.get('payload', {}).get("title", "Unknown"),
+                    "path": result.get('payload', {}).get("path", "Unknown"),
+                    "score": result.get('score', 0.0)
+                })
             relevant_contents.append(content)
-            
-            sources.append({
-                "id": result.id,
-                "title": result.payload.get("title", "Unknown"),
-                "path": result.payload.get("path", "Unknown"),
-                "score": result.score
-            })
         
         # If no relevant content found, return appropriate response
         if not relevant_contents:
