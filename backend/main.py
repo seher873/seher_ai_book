@@ -42,6 +42,34 @@ cohere_client = None
 openai_client = None
 qdrant = None
 
+def initialize_qdrant_collection():
+    """Create Qdrant collection if it doesn't exist"""
+    global qdrant
+    
+    if qdrant is None:
+        logger.warning("Qdrant client not initialized, skipping collection creation")
+        return
+    
+    try:
+        # Check if collection exists
+        collections = qdrant.get_collections().collections
+        collection_names = [c.name for c in collections]
+        
+        if COLLECTION_NAME not in collection_names:
+            logger.info(f"Creating collection '{COLLECTION_NAME}'...")
+            qdrant.create_collection(
+                collection_name=COLLECTION_NAME,
+                vectors_config=models.VectorParams(
+                    size=1024,  # cohere embed-english-v3.0 dimension
+                    distance=models.Distance.COSINE
+                )
+            )
+            logger.info(f"✓ Collection '{COLLECTION_NAME}' created successfully!")
+        else:
+            logger.info(f"✓ Collection '{COLLECTION_NAME}' already exists")
+    except Exception as e:
+        logger.error(f"Error creating collection: {e}")
+
 def initialize_services():
     """Initialize external services with environment variables"""
     global cohere_client, openai_client, qdrant
@@ -71,6 +99,9 @@ def initialize_services():
         qdrant = qdrant_client.QdrantClient(
             url=os.getenv("QDRANT_URL")
         )
+    
+    # Initialize Qdrant collection
+    initialize_qdrant_collection()
 
 # RAG Architecture Diagram:
 #
@@ -125,7 +156,7 @@ init_auth_routes(app)
 # Constants
 COLLECTION_NAME = "seher_robotic_book_netlify_app"
 EMBEDDING_MODEL = "embed-english-v3.0"
-GENERATION_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-flash-1.5")
+GENERATION_MODEL = os.getenv("OPENROUTER_MODEL", "stepfun/step-3.5-flash:free")
 
 class ChatRequest(BaseModel):
     query: str
@@ -180,6 +211,23 @@ async def chat(request: Request, chat_request: ChatRequest):
         raise HTTPException(status_code=500, detail="Services not initialized")
 
     try:
+        # Ensure collection exists before searching
+        try:
+            collections = qdrant.get_collections().collections
+            collection_names = [c.name for c in collections]
+            if COLLECTION_NAME not in collection_names:
+                logger.warning(f"Collection '{COLLECTION_NAME}' not found, creating it...")
+                qdrant.create_collection(
+                    collection_name=COLLECTION_NAME,
+                    vectors_config=models.VectorParams(
+                        size=1024,
+                        distance=models.Distance.COSINE
+                    )
+                )
+        except Exception as e:
+            logger.error(f"Error checking/creating collection: {e}")
+            raise HTTPException(status_code=500, detail=f"Qdrant collection error: {str(e)}")
+
         # Generate embedding for the query
         query_response = cohere_client.embed(
             texts=[chat_request.query],
@@ -188,23 +236,24 @@ async def chat(request: Request, chat_request: ChatRequest):
         )
         query_embedding = query_response.embeddings[0]
 
-        # Search for relevant documents in Qdrant - try different methods based on client version
+        # Search for relevant documents in Qdrant
         try:
-            # Try the newer search_points method first
-            search_results = qdrant.search_points(
-                collection_name=COLLECTION_NAME,
-                vector=query_embedding,
-                limit=chat_request.max_results,
-                with_payload=True
-            )
-        except AttributeError:
-            # Fall back to the traditional search method if search_points is not available
             search_results = qdrant.search(
                 collection_name=COLLECTION_NAME,
                 query_vector=query_embedding,
                 limit=chat_request.max_results,
                 with_payload=True
             )
+        except Exception as e:
+            logger.error(f"Qdrant search error: {e}")
+            # If collection doesn't exist or is empty, return appropriate response
+            if "404" in str(e) or "Not found" in str(e):
+                return ChatResponse(
+                    query=chat_request.query,
+                    response="Not found in the book",
+                    sources=[]
+                )
+            raise
 
         # Extract content from search results
         relevant_contents = []
@@ -355,6 +404,41 @@ async def health_check():
         "version": "1.0.0",
         "services": services_status
     }
+
+
+
+@app.get("/debug/qdrant")
+async def debug_qdrant():
+    """Debug endpoint to check Qdrant status"""
+    qdrant_url = os.getenv("QDRANT_URL", "NOT_SET")
+    qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    
+    result = {
+        "qdrant_url": qdrant_url[:20] + "..." if qdrant_url != "NOT_SET" else qdrant_url,
+        "qdrant_api_key_set": qdrant_api_key is not None,
+        "qdrant_client_initialized": qdrant is not None,
+    }
+    
+    if qdrant is None:
+        result["error"] = "Qdrant client not initialized"
+        return result
+    
+    try:
+        collections = qdrant.get_collections().collections
+        collection_names = [c.name for c in collections]
+        result.update({
+            "qdrant": "connected",
+            "collections": collection_names,
+            "expected_collection": COLLECTION_NAME,
+            "collection_exists": COLLECTION_NAME in collection_names
+        })
+    except Exception as e:
+        result.update({
+            "error": str(e),
+            "type": type(e).__name__,
+            "qdrant_status": "connection_failed"
+        })
+    return result
 
 if __name__ == "__main__":
     import uvicorn # pyright: ignore[reportMissingImports]
